@@ -2661,9 +2661,10 @@
       ];
       const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows?access_token=${SS_API_KEY}`, {
         method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify([{ cells }]),
       });
-      const data = await resp.json();
+      const data = await resp.json().catch(() => ({}));
       if (!resp.ok || data.resultCode !== 0) {
         setModalStatus('error', `Smartsheet row error: ${data.message || resp.status}`);
         document.getElementById('btn-submit-final').disabled = false;
