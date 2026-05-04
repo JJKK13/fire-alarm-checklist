@@ -1681,9 +1681,10 @@
     const canvas = document.getElementById('sigCanvas');
     const wrap = document.getElementById('sigWrap');
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
+
+    // Reset canvas buffer (also clears any previous drawing)
+    canvas.width = canvas.offsetWidth * dpr;
+    canvas.height = canvas.offsetHeight * dpr;
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.strokeStyle = '#1e293b';
@@ -1691,33 +1692,33 @@
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
+    sigHasData = false;
+    sigDrawing = false;
+    document.getElementById('sigPlaceholder').style.display = '';
+
+    // Add listeners only once
+    if (canvas._sigReady) return;
+    canvas._sigReady = true;
+
     function getPos(e) {
       const r = canvas.getBoundingClientRect();
       const src = e.touches ? e.touches[0] : e;
       return { x: src.clientX - r.left, y: src.clientY - r.top };
     }
 
-    // Remove old listeners by cloning canvas
-    const newCanvas = canvas.cloneNode(true);
-    canvas.parentNode.replaceChild(newCanvas, canvas);
-    sigHasData = false;
-
-    newCanvas.addEventListener('pointerdown', e => {
+    canvas.addEventListener('pointerdown', e => {
       sigDrawing = true;
       const pos = getPos(e);
-      newCanvas.getContext('2d').beginPath();
-      newCanvas.getContext('2d').moveTo(pos.x, pos.y);
-      newCanvas.setPointerCapture(e.pointerId);
+      const c = canvas.getContext('2d');
+      c.beginPath();
+      c.moveTo(pos.x, pos.y);
+      canvas.setPointerCapture(e.pointerId);
     });
 
-    newCanvas.addEventListener('pointermove', e => {
+    canvas.addEventListener('pointermove', e => {
       if (!sigDrawing) return;
       const pos = getPos(e);
-      const c = newCanvas.getContext('2d');
-      c.strokeStyle = '#1e293b';
-      c.lineWidth = 2.5;
-      c.lineCap = 'round';
-      c.lineJoin = 'round';
+      const c = canvas.getContext('2d');
       c.lineTo(pos.x, pos.y);
       c.stroke();
       if (!sigHasData) {
@@ -1728,8 +1729,8 @@
       }
     });
 
-    newCanvas.addEventListener('pointerup', () => { sigDrawing = false; });
-    newCanvas.addEventListener('pointerleave', () => { sigDrawing = false; });
+    canvas.addEventListener('pointerup', () => { sigDrawing = false; });
+    canvas.addEventListener('pointerleave', () => { sigDrawing = false; });
   }
 
   function clearSignature() {
