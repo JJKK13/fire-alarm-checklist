@@ -3007,20 +3007,19 @@
   loadDraftIfExists();
 
   // Show Submit button only when scrolled near the bottom (or page fits in viewport)
-  (function() {
+  function updateSubmitVisibility() {
     const btn = document.getElementById('float-submit');
-    function updateSubmitVisibility() {
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
-      const totalH = document.documentElement.scrollHeight;
-      const viewH  = window.innerHeight;
-      const canScroll = totalH > viewH + 10;
-      const nearBottom = !canScroll || (scrollY + viewH) >= totalH - 100;
-      btn.classList.toggle('visible', nearBottom);
-    }
-    window.addEventListener('scroll', updateSubmitVisibility, { passive: true });
-    window.addEventListener('resize', updateSubmitVisibility, { passive: true });
-    updateSubmitVisibility();
-  })();
+    if (!btn || btn.style.display === 'none') return;
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+    const totalH = document.documentElement.scrollHeight;
+    const viewH  = window.innerHeight;
+    const canScroll = totalH > viewH + 10;
+    const nearBottom = !canScroll || (scrollY + viewH) >= totalH - 100;
+    btn.classList.toggle('visible', nearBottom);
+  }
+  window.addEventListener('scroll', updateSubmitVisibility, { passive: true });
+  window.addEventListener('resize', updateSubmitVisibility, { passive: true });
+  window.addEventListener('DOMContentLoaded', updateSubmitVisibility);
 
   // Clear field-error highlight as soon as user fills in a required field
   ['testerCompany', 'testerName', 'testDate'].forEach(id => {
