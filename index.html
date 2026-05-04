@@ -680,6 +680,70 @@
       margin-bottom: 1rem;
     }
 
+    /* ── Overall progress bar ── */
+    #overall-progress {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .overall-progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .overall-progress-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .overall-progress-count {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .overall-cause-dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.6rem;
+    }
+
+    .cause-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    .cause-dot.complete {
+      background: rgba(22,163,74,0.2);
+      border-color: #16a34a;
+      color: #4ade80;
+    }
+
+    .cause-dot.active {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: #93c5fd;
+    }
+
     /* ── Compact cause bar (shown after selection) ── */
     #cause-compact { display: none; margin-bottom: 1.2rem; }
 
@@ -800,6 +864,18 @@
 
   <!-- ── CHECKLIST TAB ── -->
   <div id="checklist-tab">
+
+    <!-- Overall progress -->
+    <div id="overall-progress">
+      <div class="overall-progress-header">
+        <span class="overall-progress-label">Overall Progress</span>
+        <span class="overall-progress-count" id="overall-text">0 / 15 causes complete</span>
+      </div>
+      <div class="progress-bar" style="width:100%">
+        <div class="progress-fill" id="overall-fill" style="width:0%;background:#64748b"></div>
+      </div>
+      <div class="overall-cause-dots" id="overall-dots"></div>
+    </div>
 
     <!-- Cause selector -->
     <div class="cause-group">
@@ -964,8 +1040,9 @@
 
   // ── State ────────────────────────────────────────────────
   let selectedCause = null;
-  let results = {};      // effectId -> 'pass' | 'fail' | null
-  let failReasons = {};  // effectId -> string
+  let results = {};           // effectId -> 'pass' | 'fail' | null
+  let failReasons = {};       // effectId -> string
+  let completedCauses = new Set(); // cause IDs fully completed
 
   // Set today's date
   document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
@@ -1020,6 +1097,7 @@
     setStatus('', '');
     showCompletionBanner('', '');
     clearTimeout(advanceTimer);
+    updateOverallProgress();
 
     renderEffects();
     updateProgress();
@@ -1252,8 +1330,10 @@
   function resetChecks() {
     results = {};
     failReasons = {};
+    completedCauses.delete(selectedCause);
     renderEffects();
     updateProgress();
+    updateOverallProgress();
   }
 
   // ── Matrix view ──────────────────────────────────────────
@@ -1403,6 +1483,10 @@
       return;
     }
 
+    // Mark current cause complete and update overall progress
+    completedCauses.add(selectedCause);
+    updateOverallProgress();
+
     // All complete and valid — advance to next cause
     const causeIds = CAUSES.map(c => c.id);
     const nextId = causeIds[causeIds.indexOf(selectedCause) + 1];
@@ -1427,6 +1511,29 @@
     const el = document.getElementById('completion-banner');
     el.className = type;
     el.textContent = msg;
+  }
+
+  function updateOverallProgress() {
+    const total = CAUSES.length;
+    const done = completedCauses.size;
+    const pct = Math.round(done / total * 100);
+
+    document.getElementById('overall-text').textContent = `${done} / ${total} causes complete`;
+    const fill = document.getElementById('overall-fill');
+    fill.style.width = pct + '%';
+    fill.style.background = done === total ? '#22c55e' : done > 0 ? '#3b82f6' : '#64748b';
+
+    // Update cause dots
+    const dotsEl = document.getElementById('overall-dots');
+    dotsEl.innerHTML = '';
+    CAUSES.forEach(c => {
+      const dot = document.createElement('div');
+      dot.className = 'cause-dot' +
+        (completedCauses.has(c.id) ? ' complete' : c.id === selectedCause ? ' active' : '');
+      dot.textContent = c.id;
+      dot.title = c.label;
+      dotsEl.appendChild(dot);
+    });
   }
 
   // ── Signature Pad ────────────────────────────────────────
@@ -1624,6 +1731,7 @@
 
   // ── Init ─────────────────────────────────────────────────
   buildCauseButtons();
+  updateOverallProgress();
 </script>
 </body>
 </html>
