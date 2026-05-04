@@ -1923,10 +1923,16 @@
     document.getElementById('checklist-tab').style.display = name === 'checklist' ? 'block' : 'none';
     document.getElementById('matrix-tab').style.display = name === 'matrix' ? 'block' : 'none';
 
-    // Hide floating cause on matrix tab
+    // Hide floating elements on matrix tab
     const fc = document.getElementById('float-cause');
-    if (name === 'matrix') fc.style.display = 'none';
-    else if (fc.classList.contains('visible')) fc.style.display = '';
+    const fs = document.getElementById('float-submit');
+    if (name === 'matrix') {
+      fc.style.display = 'none';
+      fs.style.display = 'none';
+    } else {
+      if (fc.classList.contains('visible')) fc.style.display = '';
+      fs.style.display = '';
+    }
 
     if (name === 'matrix' && !document.querySelector('.matrix-table')) {
       buildMatrix();
@@ -2361,39 +2367,60 @@
   // ── Original document pages (PDF embedded as base64) ────
   // ── Matrix page capture ──────────────────────────────────
   async function captureMatrixPage() {
-    // Ensure matrix is built
+    // Build matrix if not already done
     if (!document.querySelector('.matrix-table')) buildMatrix();
 
-    const matrixEl = document.getElementById('matrix-view');
-    const matrixTab = document.getElementById('matrix-tab');
+    const matrixHTML = document.getElementById('matrix-view').innerHTML;
 
-    // Make matrix tab visible but off-screen for capture
-    const prevDisplay = matrixTab.style.display;
-    matrixTab.style.display = 'block';
-    matrixTab.style.position = 'absolute';
-    matrixTab.style.left = '-9999px';
-    matrixTab.style.top = '0';
-    matrixTab.style.width = 'max-content';
+    // Render in an iframe with embedded CSS (same proven approach as report pages)
+    const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; padding: 12px; width: max-content; }
+      .matrix-table { border-collapse: collapse; font-size: 10px; }
+      .matrix-table th, .matrix-table td { border: 1px solid #e2e8f0; padding: 4px 5px; text-align: center; }
+      .matrix-table th { background: #f8fafc; color: #64748b; font-weight: 600; }
+      .matrix-table th.effect-col { text-align: left; min-width: 200px; max-width: 260px; }
+      .matrix-table th.cause-col { min-width: 26px; font-size: 9px; writing-mode: vertical-rl;
+        white-space: nowrap; padding: 5px 3px; vertical-align: bottom; font-weight: 600; }
+      .matrix-table td.cat-cell { writing-mode: vertical-rl; text-orientation: mixed;
+        transform: rotate(180deg); font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
+        text-transform: uppercase; color: #64748b; background: #f8fafc; white-space: nowrap; }
+      .matrix-table td.effect-label-cell { text-align: left; font-size: 10px; padding: 4px 8px; }
+      .matrix-table td.effect-num-cell { font-weight: 700; color: #94a3b8; font-size: 9px; }
+      .dot-active { color: #16a34a; font-size: 13px; }
+      .dot-inactive { color: #cbd5e1; font-size: 11px; }
+      .matrix-table tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
+      th[style*="rgba(242,101,34"] { background: rgba(242,101,34,0.12) !important; color: #c94f15; }
+      th[style*="rgba(22,163,74"] { background: rgba(22,163,74,0.1) !important; color: #15803d; }
+    </style></head><body><div id="matrix-view">${matrixHTML}</div></body></html>`;
 
-    await new Promise(r => setTimeout(r, 150));
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:0;left:-4000px;border:none;width:1400px;height:800px;';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(fullHtml);
+    iframe.contentDocument.close();
 
-    const canvas = await html2canvas(matrixEl, {
+    // Wait for layout and fonts
+    await new Promise(r => setTimeout(r, 500));
+
+    const body = iframe.contentDocument.body;
+    const contentW = Math.max(body.scrollWidth, 600);
+    const contentH = Math.max(body.scrollHeight, 200);
+
+    const canvas = await html2canvas(body, {
       scale: 2.0,
       useCORS: true,
       backgroundColor: '#ffffff',
-      scrollX: 0,
-      scrollY: 0,
-      width: matrixEl.scrollWidth,
-      height: matrixEl.scrollHeight,
-      windowWidth: matrixEl.scrollWidth + 40,
+      width: contentW,
+      height: contentH,
+      windowWidth: contentW,
+      windowHeight: contentH,
     });
 
-    // Restore
-    matrixTab.style.display = prevDisplay;
-    matrixTab.style.position = '';
-    matrixTab.style.left = '';
-    matrixTab.style.top = '';
-    matrixTab.style.width = '';
+    document.body.removeChild(iframe);
+
+    if (!canvas.width || !canvas.height) throw new Error('Matrix canvas empty');
 
     return { dataUrl: canvas.toDataURL('image/jpeg', 0.92), w: canvas.width, h: canvas.height };
   }
