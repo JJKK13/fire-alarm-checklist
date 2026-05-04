@@ -2209,19 +2209,199 @@
   const SS_API_KEY = '6w2Hf1f78c7DrDUjfFrZCtPtvKjYcxXHhTtzb';
   const SS_SHEET_ID = '888957469413252';
   const SS_COLS = {
-    testRef:        7270084400942980,
-    testDate:       1640584866729860,
-    testerName:     6144184494100356,
-    witness:        3892384680415108,
-    causeId:        8395984307785604,
-    causeDesc:      1077634913308548,
-    area:           5581234540679044,
-    effectsRequired:3329434726993796,
-    effectsVerified:7833034354364292,
-    result:         2203534820151172,
-    effectDetail:   6707134447521668,
-    notes:          4455334633836420,
+    testDate:   1640584866729860,
+    testerName: 6144184494100356,
+    company:    3892384680415108,
+    result:     2203534820151172,
   };
+
+  // ── PDF generation ───────────────────────────────────────
+  function _pdfReportCSS() {
+    return `
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, sans-serif; color: #1a1a1a; font-size: 9.5pt; background: #fff; }
+      .pr-page { padding: 15mm 12mm 12mm; min-height: 100vh; page-break-after: always; border-bottom: 2px dashed #e2e8f0; margin-bottom: 4px; }
+      .pr-page:last-child { page-break-after: avoid; border-bottom: none; }
+      .pr-page-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #F26522; padding-bottom: 6px; margin-bottom: 16px; }
+      .pr-brand { font-size: 14pt; font-weight: 900; color: #F26522; letter-spacing: -0.5px; }
+      .pr-doc-sub { font-size: 7.5pt; color: #64748b; margin-top: 2px; }
+      .pr-page-header-right { text-align: right; font-size: 7.5pt; color: #64748b; line-height: 1.7; }
+      .pr-page-header-right strong { color: #1a1a1a; }
+      .pr-cover-hero { margin: 18px 0 16px; padding: 18px 20px; border: 2px solid #F26522; border-radius: 8px; background: #fff8f5; }
+      .pr-cover-title { font-size: 17pt; font-weight: 800; }
+      .pr-cover-proj { font-size: 9.5pt; color: #64748b; margin-top: 4px; }
+      .pr-cover-badge { display: inline-block; margin-top: 14px; padding: 5px 16px; border-radius: 6px; font-size: 10pt; font-weight: 700; letter-spacing: 1px; }
+      .badge-pass { background: #dcfce7; color: #15803d; border: 1.5px solid #16a34a; }
+      .badge-fail { background: #fee2e2; color: #b91c1c; border: 1.5px solid #dc2626; }
+      .badge-inc  { background: #f1f5f9; color: #475569; border: 1.5px solid #cbd5e1; }
+      .pr-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 14px 0; }
+      .pr-info-field { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; }
+      .pr-info-field label { font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; display: block; margin-bottom: 3px; }
+      .pr-info-field span { font-size: 10pt; font-weight: 600; }
+      .pr-stats-row { display: flex; gap: 10px; margin: 14px 0; }
+      .pr-stat-box { flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; text-align: center; }
+      .pr-stat-num { font-size: 16pt; font-weight: 800; }
+      .pr-stat-lbl { font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-top: 2px; }
+      .col-orange { color: #F26522; } .col-green { color: #15803d; } .col-red { color: #b91c1c; }
+      .pr-sum-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+      .pr-sum-table thead th { background: #1a1a1a; color: #fff; padding: 6px 10px; text-align: left; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.05em; }
+      .pr-sum-table thead th.col-num { text-align: center; }
+      .pr-sum-table tbody td { padding: 5px 10px; border-bottom: 1px solid #e2e8f0; }
+      .pr-sum-table tbody tr:nth-child(even) td { background: #f8fafc; }
+      .pr-sum-table .cid { font-weight: 700; font-size: 9pt; }
+      .pr-sum-table .col-num { text-align: center; }
+      .pr-pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 7pt; font-weight: 700; letter-spacing: 0.5px; }
+      .p-pass { background: #dcfce7; color: #15803d; }
+      .p-fail { background: #fee2e2; color: #b91c1c; }
+      .p-none { background: #f1f5f9; color: #94a3b8; }
+      .p-inc  { background: #fef9c3; color: #a16207; }
+      .pr-cause-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 11px 14px; border-radius: 8px; border-left: 5px solid #F26522; background: #fff8f5; }
+      .pr-cause-badge { width: 38px; height: 38px; border-radius: 8px; background: #F26522; color: #fff; font-size: 16pt; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+      .pr-cause-badge.pr-all-pass { background: #16a34a; }
+      .pr-cause-badge.pr-has-fail { background: #dc2626; }
+      .pr-cause-badge.pr-not-tested { background: #94a3b8; }
+      .pr-cause-title { font-size: 11pt; font-weight: 700; }
+      .pr-cause-area { font-size: 7.5pt; color: #64748b; margin-top: 2px; }
+      .pr-cause-status-wrap { margin-left: auto; }
+      .pr-effects-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+      .pr-effects-table th { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 5px 8px; font-size: 7pt; text-transform: uppercase; letter-spacing: 0.07em; color: #64748b; text-align: left; }
+      .pr-effects-table th.col-num { width: 26px; text-align: center; }
+      .pr-effects-table th.col-cat { width: 78px; }
+      .pr-effects-table th.col-status { width: 52px; text-align: center; }
+      .pr-effects-table th.col-reason { width: 28%; }
+      .pr-effects-table td { border: 1px solid #e2e8f0; padding: 5px 8px; vertical-align: top; }
+      .pr-effects-table td.col-num { text-align: center; color: #94a3b8; font-weight: 700; font-size: 8pt; }
+      .pr-effects-table td.col-status { text-align: center; font-weight: 700; font-size: 7.5pt; }
+      .pr-effects-table tr.row-pass td { background: #f0fdf4; }
+      .pr-effects-table tr.row-fail td { background: #fff7f7; }
+      .pr-effects-table tr.row-none td { background: #fafafa; color: #94a3b8; }
+      .pr-cat-tag { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 6.5pt; font-weight: 700; }
+      .pr-reason { color: #92400e; font-style: italic; font-size: 8pt; }
+      .pr-cause-summary { margin-top: 8px; padding: 7px 12px; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 8pt; display: flex; gap: 18px; flex-wrap: wrap; }
+      .pr-cause-summary span { color: #64748b; }
+      .pr-cause-summary strong { color: #1a1a1a; }
+    `;
+  }
+
+  async function generatePDFBlob() {
+    // Build full HTML document with embedded CSS (screen-mode rendering)
+    const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <style>${_pdfReportCSS()}</style></head><body>${buildPrintHTML()}</body></html>`;
+
+    // Render in a hidden off-screen iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:0;left:-3000px;width:794px;border:none;height:1123px;';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(fullHtml);
+    iframe.contentDocument.close();
+
+    // Wait for fonts/images to settle
+    await new Promise(r => setTimeout(r, 600));
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = 210;
+
+    const pages = iframe.contentDocument.querySelectorAll('.pr-page');
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await html2canvas(pages[i], {
+        scale: 1.8,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowWidth: 794,
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.88);
+      const imgH = (canvas.height / canvas.width) * pageW;
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, 0, pageW, imgH);
+    }
+
+    document.body.removeChild(iframe);
+
+    // ── Signature page ──────────────────────────────────────
+    pdf.addPage();
+    const sigPageW = 210, sigPageH = 297;
+
+    // Orange header bar
+    pdf.setFillColor(242, 101, 34);
+    pdf.rect(0, 0, sigPageW, 12, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('T&I Fitouts — Fire Alarm Cause & Effect Test Report', 14, 8);
+
+    // Title
+    pdf.setTextColor(26, 26, 26);
+    pdf.setFontSize(14);
+    pdf.text('Tester Signature & Declaration', 14, 28);
+
+    // Tester details box
+    pdf.setFillColor(248, 250, 252);
+    pdf.setDrawColor(226, 232, 240);
+    pdf.roundedRect(14, 34, sigPageW - 28, 32, 3, 3, 'FD');
+    pdf.setFontSize(8);
+    pdf.setTextColor(100, 116, 139);
+    pdf.text('TESTER NAME', 20, 42);
+    pdf.text('COMPANY', 90, 42);
+    pdf.text('DATE OF TEST', 160, 42);
+    pdf.setFontSize(10);
+    pdf.setTextColor(26, 26, 26);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(document.getElementById('testerName').value || '—', 20, 52);
+    pdf.text(document.getElementById('testerCompany').value || '—', 90, 52);
+    const rawDate = document.getElementById('testDate').value || '';
+    const dispDate = rawDate ? new Date(rawDate + 'T12:00:00').toLocaleDateString('en-IE') : '—';
+    pdf.text(dispDate, 160, 52);
+
+    // Signature box
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(100, 116, 139);
+    pdf.text('SIGNATURE', 14, 80);
+    pdf.setDrawColor(226, 232, 240);
+    pdf.setFillColor(255, 255, 255);
+    pdf.roundedRect(14, 84, sigPageW - 28, 55, 3, 3, 'FD');
+
+    // Draw actual signature from canvas
+    if (sigHasData) {
+      const sigCanvas = document.getElementById('sigCanvas');
+      const sigImg = sigCanvas.toDataURL('image/png');
+      pdf.addImage(sigImg, 'PNG', 14, 84, sigPageW - 28, 55);
+    }
+
+    // Declaration text
+    pdf.setFontSize(8);
+    pdf.setTextColor(100, 116, 139);
+    const declaration = 'I confirm that all cause and effect tests listed in this document have been carried out in accordance with the project specification and the results recorded above are accurate to the best of my knowledge.';
+    const lines = pdf.splitTextToSize(declaration, sigPageW - 28);
+    pdf.text(lines, 14, 152);
+
+    // Overall result box
+    let totalP = 0, totalF = 0;
+    CAUSES.forEach(c => {
+      const cr = allResults[c.id] || {};
+      [...ACTIVE[c.id]].forEach(id => {
+        if (cr[id] === 'pass') totalP++;
+        if (cr[id] === 'fail') totalF++;
+      });
+    });
+    const overallResult = totalF > 0 ? 'FAIL' : totalP > 0 ? 'PASS' : 'INCOMPLETE';
+    const rColor = overallResult === 'PASS' ? [22, 163, 74] : overallResult === 'FAIL' ? [220, 38, 38] : [100, 116, 139];
+    pdf.setFillColor(...rColor);
+    pdf.roundedRect(14, 165, 60, 20, 3, 3, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`Overall: ${overallResult}`, 22, 178);
+
+    pdf.setTextColor(26, 26, 26);
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`${totalP} effects passed  ·  ${totalF} effects failed  ·  ${completedCauses.size} of ${CAUSES.length} causes completed`, 80, 178);
+
+    return pdf.output('blob');
+  }
 
   async function submitComplete() {
     if (!sigHasData) {
@@ -2236,50 +2416,43 @@
       return;
     }
 
-    // Aggregate results across all tested causes
-    let totalEffects = 0, totalPassed = 0, totalFailed = 0;
-    const detailLines = [], noteLines = [];
+    // Calculate overall status
+    let totalPassed = 0, totalFailed = 0;
     CAUSES.forEach(c => {
-      const cr = allResults[c.id];
-      if (!cr || !Object.keys(cr).length) return;
+      const cr = allResults[c.id] || {};
       [...ACTIVE[c.id]].forEach(id => {
-        totalEffects++;
-        const r = cr[id];
-        if (r === 'pass') totalPassed++;
-        if (r === 'fail') totalFailed++;
-        const e = EFFECTS.find(ef => ef.id === id);
-        const pfx = r === 'pass' ? '[PASS]' : r === 'fail' ? '[FAIL]' : '[----]';
-        const rsn = (r === 'fail' && (allFailReasons[c.id]||{})[id]) ? ` — ${(allFailReasons[c.id]||{})[id]}` : '';
-        detailLines.push(`${c.id}: ${pfx} ${e.num}. ${e.label}${rsn}`);
-        if (r === 'fail' && (allFailReasons[c.id]||{})[id])
-          noteLines.push(`Cause ${c.id} / Effect ${e.num}: ${(allFailReasons[c.id]||{})[id]}`);
+        if (cr[id] === 'pass') totalPassed++;
+        if (cr[id] === 'fail') totalFailed++;
       });
     });
-
-    const overallResult = totalFailed > 0 ? 'Fail' : totalPassed === totalEffects ? 'Pass' : 'Incomplete';
+    const totalTested = totalPassed + totalFailed;
+    const totalActive = CAUSES.reduce((s, c) => s + ACTIVE[c.id].size, 0);
+    const overallResult = totalFailed > 0 ? 'Fail' : totalTested === totalActive ? 'Pass' : 'Incomplete';
     const dateStr = document.getElementById('testDate').value || new Date().toISOString().split('T')[0];
-    const testerName = document.getElementById('testerName').value || '';
-    const testRef = `TEST-${dateStr}-${testerName.split(' ')[0] || 'Unknown'}`;
 
-    const cells = [
-      { columnId: SS_COLS.testRef,         value: testRef },
-      { columnId: SS_COLS.testDate,        value: dateStr },
-      { columnId: SS_COLS.testerName,      value: testerName },
-      { columnId: SS_COLS.witness,         value: document.getElementById('testerCompany').value || '' },
-      { columnId: SS_COLS.causeId,         value: [...completedCauses].join(', ') || selectedCause || '' },
-      { columnId: SS_COLS.causeDesc,       value: `${completedCauses.size} of ${CAUSES.length} causes tested` },
-      { columnId: SS_COLS.area,            value: 'Multiple' },
-      { columnId: SS_COLS.effectsRequired, value: totalEffects },
-      { columnId: SS_COLS.effectsVerified, value: totalPassed },
-      { columnId: SS_COLS.result,          value: overallResult },
-      { columnId: SS_COLS.effectDetail,    value: detailLines.join('\n') },
-      { columnId: SS_COLS.notes,           value: noteLines.join(' | ') },
-    ];
-
-    setModalStatus('loading', 'Submitting to Smartsheet...');
+    setModalStatus('loading', '&#9203; Generating PDF report...');
     document.getElementById('btn-submit-final').disabled = true;
 
+    let pdfBlob;
     try {
+      pdfBlob = await generatePDFBlob();
+    } catch (err) {
+      setModalStatus('error', `PDF generation failed: ${err.message}`);
+      document.getElementById('btn-submit-final').disabled = false;
+      return;
+    }
+
+    setModalStatus('loading', '&#9203; Submitting to Smartsheet...');
+
+    try {
+      // Add row with 4 columns
+      const cells = [
+        { columnId: SS_COLS.company,    value: document.getElementById('testerCompany').value || '' },
+        { columnId: SS_COLS.testerName, value: document.getElementById('testerName').value || '' },
+        { columnId: SS_COLS.testDate,   value: dateStr },
+        { columnId: SS_COLS.result,     value: overallResult },
+      ];
+
       const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${SS_API_KEY}`, 'Content-Type': 'application/json' },
@@ -2287,33 +2460,38 @@
       });
       const data = await resp.json();
 
-      if (resp.ok && data.resultCode === 0) {
-        const rowId = data.result[0].id;
-        // Attach signature
-        try {
-          const canvas = document.getElementById('sigCanvas');
-          const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-          const fd = new FormData();
-          fd.append('file', blob, 'signature.png');
-          await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${SS_API_KEY}`, 'Content-Disposition': 'attachment; filename="signature.png"' },
-            body: fd,
-          });
-        } catch (_) {}
-
-        // Clear draft
-        localStorage.removeItem(DRAFT_KEY);
-        document.getElementById('draft-banner')?.remove();
-
-        // Send email if provided
-        const email = document.getElementById('emailTo').value.trim();
-        if (email) sendEmail(email, testRef, overallResult);
-
-        setModalStatus('success', `&#10003; Submitted — ${testRef} logged to Smartsheet. ${totalPassed} Pass, ${totalFailed} Fail across ${completedCauses.size} causes. Result: ${overallResult}.${email ? ' Email sent.' : ''}`);
-      } else {
+      if (!resp.ok || data.resultCode !== 0) {
         setModalStatus('error', `Smartsheet error: ${data.message || 'Unknown error'}`);
+        document.getElementById('btn-submit-final').disabled = false;
+        return;
       }
+
+      const rowId = data.result[0].id;
+
+      // Attach PDF
+      setModalStatus('loading', '&#9203; Attaching PDF report...');
+      const fd = new FormData();
+      const testerName = document.getElementById('testerName').value || 'Report';
+      const fileName = `FireAlarm_P24136_${testerName.replace(/\s+/g,'-')}_${dateStr}.pdf`;
+      fd.append('file', pdfBlob, fileName);
+      await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SS_API_KEY}`,
+          'Content-Disposition': `attachment; filename="${fileName}"`,
+        },
+        body: fd,
+      });
+
+      // Clear draft
+      localStorage.removeItem(DRAFT_KEY);
+      document.getElementById('draft-banner')?.remove();
+
+      // Send email if provided
+      const email = document.getElementById('emailTo').value.trim();
+      if (email) sendEmail(email, fileName.replace('.pdf',''), overallResult);
+
+      setModalStatus('success', `&#10003; Submitted — ${overallResult} result logged to Smartsheet with PDF attached. ${totalPassed} Pass, ${totalFailed} Fail across ${completedCauses.size} causes.${email ? ' Email sent.' : ''}`);
     } catch (err) {
       setModalStatus('error', `Network error: ${err.message}`);
     } finally {
@@ -2656,5 +2834,7 @@
     </div>
   </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 </body>
 </html>
