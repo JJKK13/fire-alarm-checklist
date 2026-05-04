@@ -2659,9 +2659,9 @@
         { columnId: SS_COLS.effectsFailed,  value: totalFailed },
         { columnId: SS_COLS.totalEffects,   value: totalActive },
       ];
-      const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows?access_token=${SS_API_KEY}`, {
+      const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows`, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
+        headers: { 'Authorization': `Bearer ${SS_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify([{ cells }]),
       });
       const data = await resp.json().catch(() => ({}));
@@ -2682,8 +2682,9 @@
     try {
       const fd = new FormData();
       fd.append('file', new File([pdfBlob], fileName, { type: 'application/pdf' }));
-      const attachResp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments?access_token=${SS_API_KEY}`, {
+      const attachResp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments`, {
         method: 'POST',
+        headers: { 'Authorization': `Bearer ${SS_API_KEY}` },
         body: fd,
       });
       if (!attachResp.ok) {
