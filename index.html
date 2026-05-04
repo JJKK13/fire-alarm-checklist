@@ -601,10 +601,7 @@
 
     .sig-warn-msg.show { display: block; }
 
-    @media print {
-      .signature-section { border: 1px solid #ccc; background: #fff; color: #000; }
-      #sigCanvas { border: 1px solid #ccc; }
-    }
+    #print-report { display: none; }
 
     .effect-status {
       font-size: 0.7rem;
@@ -1092,13 +1089,132 @@
     }
 
     @media print {
-      header, .info-bar, .tabs, .cause-group, .toolbar, .note-toggle, .btn-reset, #float-submit, #submit-modal { display: none !important; }
-      body { background: #fff; color: #000; }
-      .effect-row { border: 1px solid #ccc; }
-      .effect-row.inactive { display: none; }
-      #matrix-view, #no-cause { display: none; }
-      #checklist-panel { display: block !important; }
-      main { padding: 0; max-width: 100%; }
+      body.printing > *:not(#print-report) { display: none !important; }
+      body.printing #print-report {
+        display: block !important;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        color: #1a1a1a;
+        font-size: 9.5pt;
+        background: #fff;
+      }
+      @page { margin: 12mm; size: A4 portrait; }
+
+      .pr-page { page-break-after: always; break-after: page; padding-bottom: 6mm; }
+      .pr-page:last-child { page-break-after: avoid; break-after: avoid; }
+
+      .pr-page-header {
+        display: flex; justify-content: space-between; align-items: flex-end;
+        border-bottom: 3px solid #F26522; padding-bottom: 6px; margin-bottom: 16px;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .pr-brand { font-size: 14pt; font-weight: 900; color: #F26522; letter-spacing: -0.5px; }
+      .pr-doc-sub { font-size: 7.5pt; color: #64748b; margin-top: 2px; }
+      .pr-page-header-right { text-align: right; font-size: 7.5pt; color: #64748b; line-height: 1.7; }
+      .pr-page-header-right strong { color: #1a1a1a; }
+
+      .pr-cover-hero {
+        margin: 18px 0 16px; padding: 18px 20px;
+        border: 2px solid #F26522; border-radius: 8px; background: #fff8f5 !important;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .pr-cover-title { font-size: 17pt; font-weight: 800; }
+      .pr-cover-proj { font-size: 9.5pt; color: #64748b; margin-top: 4px; }
+      .pr-cover-badge {
+        display: inline-block; margin-top: 14px; padding: 5px 16px;
+        border-radius: 6px; font-size: 10pt; font-weight: 700; letter-spacing: 1px;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .badge-pass { background: #dcfce7 !important; color: #15803d; border: 1.5px solid #16a34a; }
+      .badge-fail { background: #fee2e2 !important; color: #b91c1c; border: 1.5px solid #dc2626; }
+      .badge-inc  { background: #f1f5f9 !important; color: #475569; border: 1.5px solid #cbd5e1; }
+
+      .pr-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 14px 0; }
+      .pr-info-field { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; }
+      .pr-info-field label { font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; display: block; margin-bottom: 3px; }
+      .pr-info-field span { font-size: 10pt; font-weight: 600; }
+
+      .pr-stats-row { display: flex; gap: 10px; margin: 14px 0; }
+      .pr-stat-box { flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; text-align: center; }
+      .pr-stat-num { font-size: 16pt; font-weight: 800; }
+      .pr-stat-lbl { font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-top: 2px; }
+      .col-orange { color: #F26522; } .col-green { color: #15803d; }
+      .col-red { color: #b91c1c; } .col-grey { color: #94a3b8; }
+
+      .pr-sum-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+      .pr-sum-table thead th {
+        background: #1a1a1a !important; color: #fff !important; padding: 6px 10px;
+        text-align: left; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.05em;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .pr-sum-table thead th.col-num { text-align: center; }
+      .pr-sum-table tbody td { padding: 5px 10px; border-bottom: 1px solid #e2e8f0; }
+      .pr-sum-table tbody tr:nth-child(even) td { background: #f8fafc !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .pr-sum-table .cid { font-weight: 700; font-size: 9pt; }
+      .pr-sum-table .col-num { text-align: center; }
+
+      .pr-pill {
+        display: inline-block; padding: 2px 9px; border-radius: 20px;
+        font-size: 7pt; font-weight: 700; letter-spacing: 0.5px;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .p-pass { background: #dcfce7 !important; color: #15803d; }
+      .p-fail { background: #fee2e2 !important; color: #b91c1c; }
+      .p-none { background: #f1f5f9 !important; color: #94a3b8; }
+      .p-inc  { background: #fef9c3 !important; color: #a16207; }
+
+      .pr-cause-header {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 12px; padding: 11px 14px;
+        border-radius: 8px; border-left: 5px solid #F26522;
+        background: #fff8f5 !important;
+        break-inside: avoid; page-break-inside: avoid;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .pr-cause-badge {
+        width: 38px; height: 38px; border-radius: 8px; background: #F26522 !important;
+        color: #fff !important; font-size: 16pt; font-weight: 900;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .pr-cause-badge.pr-all-pass { background: #16a34a !important; }
+      .pr-cause-badge.pr-has-fail { background: #dc2626 !important; }
+      .pr-cause-badge.pr-not-tested { background: #94a3b8 !important; }
+      .pr-cause-title { font-size: 11pt; font-weight: 700; }
+      .pr-cause-area { font-size: 7.5pt; color: #64748b; margin-top: 2px; }
+      .pr-cause-status-wrap { margin-left: auto; }
+
+      .pr-effects-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+      .pr-effects-table th {
+        background: #f1f5f9 !important; border: 1px solid #e2e8f0; padding: 5px 8px;
+        font-size: 7pt; text-transform: uppercase; letter-spacing: 0.07em; color: #64748b; text-align: left;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .pr-effects-table th.col-num { width: 26px; text-align: center; }
+      .pr-effects-table th.col-cat { width: 78px; }
+      .pr-effects-table th.col-status { width: 52px; text-align: center; }
+      .pr-effects-table th.col-reason { width: 28%; }
+      .pr-effects-table td { border: 1px solid #e2e8f0; padding: 5px 8px; vertical-align: top; }
+      .pr-effects-table td.col-num { text-align: center; color: #94a3b8; font-weight: 700; font-size: 8pt; }
+      .pr-effects-table td.col-status { text-align: center; font-weight: 700; font-size: 7.5pt; }
+      .pr-effects-table tr.row-pass td { background: #f0fdf4 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .pr-effects-table tr.row-fail td { background: #fff7f7 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .pr-effects-table tr.row-none td { background: #fafafa !important; color: #94a3b8; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .pr-cat-tag {
+        display: inline-block; padding: 1px 5px; border-radius: 3px;
+        font-size: 6.5pt; font-weight: 700;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .pr-reason { color: #92400e; font-style: italic; font-size: 8pt; }
+
+      .pr-cause-summary {
+        margin-top: 8px; padding: 7px 12px; border-radius: 6px;
+        border: 1px solid #e2e8f0; background: #f8fafc !important;
+        font-size: 8pt; display: flex; gap: 18px; flex-wrap: wrap;
+        break-inside: avoid; page-break-inside: avoid;
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+      }
+      .pr-cause-summary span { color: #64748b; }
+      .pr-cause-summary strong { color: #1a1a1a; }
     }
   </style>
 </head>
@@ -2252,7 +2368,7 @@
       ? (totalFail > 0 ? 'FAIL' : 'PASS')
       : 'INCOMPLETE';
 
-    const css = `
+    const _cssUnused = `
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; font-size: 9.5pt; background: #fff; }
       @page { margin: 12mm 12mm 12mm 12mm; size: A4 portrait; }
@@ -2350,11 +2466,7 @@
       .pr-cause-summary strong { color: #1a1a1a; }
     `;
 
-    let html = `<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8">
-<title>Fire Alarm Test Report — P24136</title>
-<style>${css}</style>
-</head><body>`;
+    let html = ``;
 
     // ── Cover page ──────────────────────────────────────────
     html += `<div class="pr-page">`;
@@ -2482,18 +2594,17 @@
       html += `</div>`; // end cause page
     });
 
-    html += `</body></html>`;
     return html;
   }
 
   function printReport() {
     archiveCurrentCause();
-    const w = window.open('', '_blank', 'width=900,height=700');
-    if (!w) { alert('Please allow pop-ups for this page to print the report.'); return; }
-    w.document.write(buildPrintHTML());
-    w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 700);
+    const container = document.getElementById('print-report');
+    container.innerHTML = buildPrintHTML();
+    document.body.classList.add('printing');
+    window.print();
+    document.body.classList.remove('printing');
+    container.innerHTML = '';
   }
 
   // ── Init ─────────────────────────────────────────────────
@@ -2509,6 +2620,8 @@
     el.addEventListener('input',  () => { if (el.value.trim()) wrap.classList.remove('field-error'); });
   });
 </script>
+<div id="print-report"></div>
+
 <!-- Floating submit button -->
 <button id="float-submit" onclick="openSubmitModal()">Submit Results</button>
 
