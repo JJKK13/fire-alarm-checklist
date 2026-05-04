@@ -2211,6 +2211,291 @@
     el.innerHTML = msg;
   }
 
+  // ── Print / PDF report ──────────────────────────────────
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function _prPageHeader(tester, company, date) {
+    return `<div class="pr-page-header">
+      <div class="pr-page-header-left">
+        <div class="pr-brand">T&amp;I Fitouts</div>
+        <div class="pr-doc-sub">QF 95 — Fire Alarm Cause &amp; Effect Rev 2</div>
+      </div>
+      <div class="pr-page-header-right">
+        <strong>P24136 — Mastercard Two South County</strong><br>
+        ${escHtml(tester)} &nbsp;|&nbsp; ${escHtml(company)} &nbsp;|&nbsp; ${escHtml(date)}
+      </div>
+    </div>`;
+  }
+
+  function buildPrintHTML() {
+    archiveCurrentCause();
+
+    const tester = document.getElementById('testerName').value || '—';
+    const company = document.getElementById('testerCompany').value || '—';
+    const rawDate = document.getElementById('testDate').value || '';
+    const dateFormatted = rawDate
+      ? new Date(rawDate + 'T12:00:00').toLocaleDateString('en-IE', {day:'2-digit', month:'long', year:'numeric'})
+      : '—';
+
+    let totalPass = 0, totalFail = 0, causesComplete = 0;
+    CAUSES.forEach(c => {
+      const cr = allResults[c.id] || {};
+      const activeIds = [...ACTIVE[c.id]];
+      const p = activeIds.filter(id => cr[id] === 'pass').length;
+      const f = activeIds.filter(id => cr[id] === 'fail').length;
+      totalPass += p; totalFail += f;
+      if (p + f === activeIds.length && activeIds.length > 0) causesComplete++;
+    });
+    const overallResult = causesComplete === CAUSES.length
+      ? (totalFail > 0 ? 'FAIL' : 'PASS')
+      : 'INCOMPLETE';
+
+    const css = `
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; font-size: 9.5pt; background: #fff; }
+      @page { margin: 12mm 12mm 12mm 12mm; size: A4 portrait; }
+      .pr-page { page-break-after: always; break-after: page; padding-bottom: 8mm; }
+      .pr-page:last-child { page-break-after: avoid; break-after: avoid; }
+
+      .pr-page-header {
+        display: flex; justify-content: space-between; align-items: flex-end;
+        border-bottom: 3px solid #F26522; padding-bottom: 6px; margin-bottom: 16px;
+      }
+      .pr-brand { font-size: 14pt; font-weight: 900; color: #F26522; letter-spacing: -0.5px; }
+      .pr-doc-sub { font-size: 7.5pt; color: #64748b; margin-top: 2px; }
+      .pr-page-header-right { text-align: right; font-size: 7.5pt; color: #64748b; line-height: 1.7; }
+      .pr-page-header-right strong { color: #1a1a1a; }
+
+      .pr-cover-hero { margin: 18px 0 16px; padding: 18px 20px; border: 2px solid #F26522; border-radius: 8px; background: #fff8f5; }
+      .pr-cover-title { font-size: 17pt; font-weight: 800; color: #1a1a1a; }
+      .pr-cover-proj { font-size: 9.5pt; color: #64748b; margin-top: 4px; }
+      .pr-cover-badge {
+        display: inline-block; margin-top: 14px; padding: 5px 16px;
+        border-radius: 6px; font-size: 10pt; font-weight: 700; letter-spacing: 1px;
+      }
+      .badge-pass { background: #dcfce7; color: #15803d; border: 1.5px solid #16a34a; }
+      .badge-fail { background: #fee2e2; color: #b91c1c; border: 1.5px solid #dc2626; }
+      .badge-inc  { background: #f1f5f9; color: #475569; border: 1.5px solid #cbd5e1; }
+
+      .pr-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 14px 0; }
+      .pr-info-field { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; }
+      .pr-info-field label { font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; display: block; margin-bottom: 3px; }
+      .pr-info-field span { font-size: 10pt; font-weight: 600; }
+
+      .pr-stats-row { display: flex; gap: 10px; margin: 14px 0; }
+      .pr-stat-box { flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; text-align: center; }
+      .pr-stat-num { font-size: 16pt; font-weight: 800; }
+      .pr-stat-lbl { font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-top: 2px; }
+      .col-orange { color: #F26522; } .col-green { color: #15803d; }
+      .col-red { color: #b91c1c; } .col-grey { color: #94a3b8; }
+
+      .pr-sum-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+      .pr-sum-table thead th { background: #1a1a1a; color: #fff; padding: 6px 10px; text-align: left; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.05em; }
+      .pr-sum-table thead th.col-num { text-align: center; }
+      .pr-sum-table tbody td { padding: 5px 10px; border-bottom: 1px solid #e2e8f0; }
+      .pr-sum-table tbody tr:nth-child(even) td { background: #f8fafc; }
+      .pr-sum-table .cid { font-weight: 700; font-size: 9pt; }
+      .pr-sum-table .col-num { text-align: center; }
+
+      .pr-pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 7pt; font-weight: 700; letter-spacing: 0.5px; }
+      .p-pass { background: #dcfce7; color: #15803d; }
+      .p-fail { background: #fee2e2; color: #b91c1c; }
+      .p-none { background: #f1f5f9; color: #94a3b8; }
+      .p-inc  { background: #fef9c3; color: #a16207; }
+
+      .pr-cause-header {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 12px; padding: 11px 14px;
+        border-radius: 8px; border-left: 5px solid #F26522; background: #fff8f5;
+        break-inside: avoid;
+      }
+      .pr-cause-badge {
+        width: 38px; height: 38px; border-radius: 8px; background: #F26522;
+        color: #fff; font-size: 16pt; font-weight: 900;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+      .pr-cause-badge.pr-all-pass { background: #16a34a; }
+      .pr-cause-badge.pr-has-fail { background: #dc2626; }
+      .pr-cause-badge.pr-not-tested { background: #94a3b8; }
+      .pr-cause-title { font-size: 11pt; font-weight: 700; }
+      .pr-cause-area { font-size: 7.5pt; color: #64748b; margin-top: 2px; }
+      .pr-cause-status-wrap { margin-left: auto; }
+
+      .pr-effects-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+      .pr-effects-table th {
+        background: #f1f5f9; border: 1px solid #e2e8f0; padding: 5px 8px;
+        font-size: 7pt; text-transform: uppercase; letter-spacing: 0.07em; color: #64748b; text-align: left;
+      }
+      .pr-effects-table th.col-num { width: 26px; text-align: center; }
+      .pr-effects-table th.col-cat { width: 78px; }
+      .pr-effects-table th.col-status { width: 52px; text-align: center; }
+      .pr-effects-table th.col-reason { width: 28%; }
+      .pr-effects-table td { border: 1px solid #e2e8f0; padding: 5px 8px; vertical-align: top; }
+      .pr-effects-table td.col-num { text-align: center; color: #94a3b8; font-weight: 700; font-size: 8pt; }
+      .pr-effects-table td.col-status { text-align: center; font-weight: 700; font-size: 7.5pt; }
+      .pr-effects-table tr.row-pass td { background: #f0fdf4; }
+      .pr-effects-table tr.row-fail td { background: #fff7f7; }
+      .pr-effects-table tr.row-none td { background: #fafafa; color: #94a3b8; }
+      .pr-cat-tag { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 6.5pt; font-weight: 700; }
+      .pr-reason { color: #92400e; font-style: italic; font-size: 8pt; }
+
+      .pr-cause-summary {
+        margin-top: 8px; padding: 7px 12px; border-radius: 6px;
+        border: 1px solid #e2e8f0; background: #f8fafc; font-size: 8pt;
+        display: flex; gap: 18px; flex-wrap: wrap; break-inside: avoid;
+      }
+      .pr-cause-summary span { color: #64748b; }
+      .pr-cause-summary strong { color: #1a1a1a; }
+    `;
+
+    let html = `<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8">
+<title>Fire Alarm Test Report — P24136</title>
+<style>${css}</style>
+</head><body>`;
+
+    // ── Cover page ──────────────────────────────────────────
+    html += `<div class="pr-page">`;
+    html += _prPageHeader(tester, company, dateFormatted);
+
+    const ovClass = overallResult === 'PASS' ? 'badge-pass' : overallResult === 'FAIL' ? 'badge-fail' : 'badge-inc';
+    const ovLabel = overallResult === 'PASS' ? '✓ OVERALL PASS' : overallResult === 'FAIL' ? '✗ CONTAINS FAILURES' : '⚠ INCOMPLETE';
+    html += `<div class="pr-cover-hero">
+      <div class="pr-cover-title">Fire Alarm Cause &amp; Effect Test Report</div>
+      <div class="pr-cover-proj">P24136 — Mastercard Two South County &nbsp;|&nbsp; QF 95 Rev 2 &nbsp;|&nbsp; 14/01/2026</div>
+      <div class="pr-cover-badge ${ovClass}">${ovLabel}</div>
+    </div>`;
+
+    html += `<div class="pr-info-grid">
+      <div class="pr-info-field"><label>Tester Name</label><span>${escHtml(tester)}</span></div>
+      <div class="pr-info-field"><label>Company</label><span>${escHtml(company)}</span></div>
+      <div class="pr-info-field"><label>Date of Test</label><span>${escHtml(dateFormatted)}</span></div>
+    </div>`;
+
+    html += `<div class="pr-stats-row">
+      <div class="pr-stat-box"><div class="pr-stat-num col-orange">${CAUSES.length}</div><div class="pr-stat-lbl">Total Causes</div></div>
+      <div class="pr-stat-box"><div class="pr-stat-num col-green">${causesComplete}</div><div class="pr-stat-lbl">Causes Complete</div></div>
+      <div class="pr-stat-box"><div class="pr-stat-num col-green">${totalPass}</div><div class="pr-stat-lbl">Effects Passed</div></div>
+      <div class="pr-stat-box"><div class="pr-stat-num col-red">${totalFail}</div><div class="pr-stat-lbl">Effects Failed</div></div>
+    </div>`;
+
+    html += `<table class="pr-sum-table"><thead><tr>
+      <th>Cause</th><th>Description</th><th>Area</th>
+      <th class="col-num">Effects</th><th class="col-num">Pass</th><th class="col-num">Fail</th><th>Status</th>
+    </tr></thead><tbody>`;
+
+    CAUSES.forEach(c => {
+      const cr = allResults[c.id] || {};
+      const activeIds = [...ACTIVE[c.id]];
+      const p = activeIds.filter(id => cr[id] === 'pass').length;
+      const f = activeIds.filter(id => cr[id] === 'fail').length;
+      const tested = p + f;
+      let pillCls, pillTxt;
+      if (tested === 0) { pillCls = 'p-none'; pillTxt = 'Not Tested'; }
+      else if (tested < activeIds.length) { pillCls = 'p-inc'; pillTxt = 'Incomplete'; }
+      else if (f > 0) { pillCls = 'p-fail'; pillTxt = 'FAIL'; }
+      else { pillCls = 'p-pass'; pillTxt = 'PASS'; }
+      html += `<tr>
+        <td class="cid">${c.id}</td>
+        <td>${escHtml(c.label)}</td>
+        <td style="font-size:7.5pt;color:#64748b">${escHtml(c.area)}</td>
+        <td class="col-num">${activeIds.length}</td>
+        <td class="col-num" style="color:${p>0?'#15803d':'#94a3b8'};font-weight:${p>0?700:400}">${tested>0?p:'—'}</td>
+        <td class="col-num" style="color:${f>0?'#b91c1c':'#94a3b8'};font-weight:${f>0?700:400}">${tested>0?f:'—'}</td>
+        <td><span class="pr-pill ${pillCls}">${pillTxt}</span></td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div>`; // end cover page
+
+    // ── One page per cause ──────────────────────────────────
+    CAUSES.forEach(c => {
+      const cr = allResults[c.id] || {};
+      const cfr = allFailReasons[c.id] || {};
+      const activeIds = [...ACTIVE[c.id]];
+      const p = activeIds.filter(id => cr[id] === 'pass').length;
+      const f = activeIds.filter(id => cr[id] === 'fail').length;
+      const tested = p + f;
+
+      let bdgCls = 'pr-not-tested';
+      if (tested === activeIds.length && f === 0 && tested > 0) bdgCls = 'pr-all-pass';
+      else if (f > 0 && tested === activeIds.length) bdgCls = 'pr-has-fail';
+
+      let pillCls, pillTxt;
+      if (tested === 0) { pillCls = 'p-none'; pillTxt = 'Not Tested'; }
+      else if (tested < activeIds.length) { pillCls = 'p-inc'; pillTxt = 'Incomplete'; }
+      else if (f > 0) { pillCls = 'p-fail'; pillTxt = 'FAIL'; }
+      else { pillCls = 'p-pass'; pillTxt = 'PASS'; }
+
+      html += `<div class="pr-page">`;
+      html += _prPageHeader(tester, company, dateFormatted);
+
+      html += `<div class="pr-cause-header">
+        <div class="pr-cause-badge ${bdgCls}">${c.id}</div>
+        <div>
+          <div class="pr-cause-title">${escHtml(c.label)}</div>
+          <div class="pr-cause-area">${escHtml(c.area)}</div>
+        </div>
+        <div class="pr-cause-status-wrap"><span class="pr-pill ${pillCls}">${pillTxt}</span></div>
+      </div>`;
+
+      html += `<table class="pr-effects-table"><thead><tr>
+        <th class="col-num">#</th>
+        <th class="col-cat">Category</th>
+        <th>Effect Description</th>
+        <th class="col-status">Result</th>
+        <th class="col-reason">Fail Reason / Notes</th>
+      </tr></thead><tbody>`;
+
+      CAT_ORDER.forEach(cat => {
+        const catEffects = EFFECTS.filter(e => e.category === cat && activeIds.includes(e.id));
+        catEffects.forEach(e => {
+          const result = cr[e.id];
+          const reason = cfr[e.id] || '';
+          const rowCls = result === 'pass' ? 'row-pass' : result === 'fail' ? 'row-fail' : 'row-none';
+          const statusHtml = result === 'pass'
+            ? '<span style="color:#15803d">✓ PASS</span>'
+            : result === 'fail'
+              ? '<span style="color:#b91c1c">✗ FAIL</span>'
+              : '<span style="color:#cbd5e1">—</span>';
+          const catColor = CAT_COLORS[cat] || '#888';
+          html += `<tr class="${rowCls}">
+            <td class="col-num">${e.num}</td>
+            <td><span class="pr-cat-tag" style="background:${catColor}22;color:${catColor}">${escHtml(cat)}</span></td>
+            <td>${escHtml(e.label)}</td>
+            <td class="col-status">${statusHtml}</td>
+            <td class="pr-reason">${escHtml(reason)}</td>
+          </tr>`;
+        });
+      });
+
+      html += `</tbody></table>`;
+      html += `<div class="pr-cause-summary">
+        <span>Active effects: <strong>${activeIds.length}</strong></span>
+        <span>Passed: <strong style="color:#15803d">${p}</strong></span>
+        <span>Failed: <strong style="color:#b91c1c">${f}</strong></span>
+        <span>Not tested: <strong style="color:#94a3b8">${activeIds.length - tested}</strong></span>
+      </div>`;
+
+      html += `</div>`; // end cause page
+    });
+
+    html += `</body></html>`;
+    return html;
+  }
+
+  function printReport() {
+    archiveCurrentCause();
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (!w) { alert('Please allow pop-ups for this page to print the report.'); return; }
+    w.document.write(buildPrintHTML());
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 700);
+  }
+
   // ── Init ─────────────────────────────────────────────────
   buildCauseButtons();
   updateOverallProgress();
@@ -2254,7 +2539,7 @@
     <div class="modal-footer">
       <button class="btn-save-draft" onclick="saveDraft()">&#128190; Save Draft</button>
       <button class="btn-submit-final" id="btn-submit-final" onclick="submitComplete()">&#10003; Submit Complete</button>
-      <button class="print-btn" onclick="window.print()" style="flex:1">&#128438; Print / PDF</button>
+      <button class="print-btn" onclick="printReport()" style="flex:1">&#128438; Print / PDF</button>
     </div>
   </div>
 </div>
