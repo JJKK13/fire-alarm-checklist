@@ -1264,19 +1264,12 @@
     renderEffects();
     updateProgress();
 
-    // Scroll checklist into view
-    setTimeout(() => {
-      document.getElementById('checklist-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
   }
 
   // ── Change cause (expand grid again) ─────────────────────
   function changeCause() {
     document.querySelectorAll('.cause-group').forEach(g => g.style.display = 'block');
     document.getElementById('cause-compact').style.display = 'none';
-    setTimeout(() => {
-      document.getElementById('causeGrid-ext').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
   }
 
   // ── Render effects ───────────────────────────────────────
@@ -1446,25 +1439,10 @@
     // Show/hide fail reason box
     const failDiv = document.getElementById('fail-reason-' + id);
     failDiv.style.display = result === 'fail' ? 'block' : 'none';
-    if (result === 'fail') {
-      failDiv.querySelector('textarea').focus();
-    }
 
     updateProgress();
 
     // On pass, scroll to next unanswered effect
-    if (result === 'pass') {
-      const activeSet = ACTIVE[selectedCause];
-      const activeIds = EFFECTS.filter(e => activeSet.has(e.id)).map(e => e.id);
-      const currentIdx = activeIds.indexOf(id);
-      const nextUnanswered = activeIds.slice(currentIdx + 1).find(eid => !results[eid]);
-      if (nextUnanswered !== undefined) {
-        setTimeout(() => {
-          document.getElementById('row-' + nextUnanswered).scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
-      }
-    }
-
     checkAllAnswered();
   }
 
@@ -1656,12 +1634,8 @@
     if (nextId) {
       const nextCause = CAUSES.find(c => c.id === nextId);
       showCompletionBanner('success',
-        `✓ Cause ${selectedCause} complete — advancing to Cause ${nextId}: ${nextCause.label}...`
+        `✓ Cause ${selectedCause} complete — select Cause ${nextId}: ${nextCause.label} when ready.`
       );
-      clearTimeout(advanceTimer);
-      advanceTimer = setTimeout(() => {
-        selectCause(nextId);
-      }, 2000);
     } else {
       showCompletionBanner('success',
         `✓ All causes completed! Use the Submit to Smartsheet button to log your results.`
