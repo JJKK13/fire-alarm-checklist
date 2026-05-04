@@ -908,6 +908,57 @@
     .btn-change:hover { background: var(--primary); color: #fff; }
 
     /* ── Floating submit button ── */
+    /* ── Floating cause indicator ── */
+    #float-cause {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      border: 2px solid var(--primary);
+      border-radius: 50px;
+      padding: 0.45rem 1rem 0.45rem 0.5rem;
+      z-index: 150;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #float-cause.visible { display: flex; }
+    #float-cause .fc-badge {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    #float-cause .fc-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #fff;
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #float-cause .fc-progress {
+      font-size: 0.72rem;
+      color: var(--primary);
+      font-weight: 700;
+      background: rgba(242,101,34,0.15);
+      border-radius: 20px;
+      padding: 0.1rem 0.5rem;
+    }
+
+    @media print { #float-cause { display: none !important; } }
+
     #float-submit {
       position: fixed;
       bottom: 1.5rem;
@@ -1517,6 +1568,11 @@
     // Update compact bar
     document.getElementById('compact-badge').textContent = id;
     document.getElementById('compact-label').textContent = cause.label;
+
+    // Floating cause indicator
+    document.getElementById('fc-badge').textContent = id;
+    document.getElementById('fc-label').textContent = cause.label;
+    document.getElementById('float-cause').classList.add('visible');
     document.getElementById('compact-area').textContent = cause.area;
 
     // Collapse cause grids, show compact bar
@@ -1740,6 +1796,8 @@
       fill.style.background = pct === 100 ? '#22c55e' : pct > 50 ? '#3b82f6' : '#64748b';
       document.getElementById('progress-text').textContent = `${done} / ${total} completed`;
     }
+    // Update floating cause indicator progress
+    document.getElementById('fc-progress').textContent = `${done} / ${total}`;
   }
 
   function resetChecks() {
@@ -2808,6 +2866,11 @@
 <div id="print-report"></div>
 
 <!-- Floating submit button -->
+<div id="float-cause">
+  <div class="fc-badge" id="fc-badge"></div>
+  <div class="fc-label" id="fc-label"></div>
+  <div class="fc-progress" id="fc-progress"></div>
+</div>
 <button id="float-submit" onclick="openSubmitModal()">Submit Results</button>
 
 <!-- Submit modal -->
