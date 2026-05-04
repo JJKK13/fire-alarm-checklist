@@ -755,6 +755,20 @@
       color: #15803d;
     }
 
+    .cause-dot.partial {
+      background: rgba(242,101,34,0.15);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .cause-dot.failed {
+      background: rgba(220,38,38,0.15);
+      border-color: #dc2626;
+      color: #dc2626;
+      font-weight: 700;
+    }
+
     .cause-dot.active {
       background: var(--primary-dim);
       border-color: var(--primary);
@@ -1631,10 +1645,11 @@
     const activeSet = ACTIVE[selectedCause];
     const activeIds = [...activeSet];
 
-    // Not all answered yet — hide banner
+    // Not all answered yet — hide banner, but still refresh dots
     const allAnswered = activeIds.every(id => results[id]);
     if (!allAnswered) {
       showCompletionBanner('', '');
+      updateOverallProgress();
       return;
     }
 
@@ -1694,15 +1709,27 @@
     document.getElementById('overall-text').textContent = `${done} / ${total} causes complete`;
     const fill = document.getElementById('overall-fill');
     fill.style.width = pct + '%';
-    fill.style.background = done === total ? '#22c55e' : done > 0 ? '#3b82f6' : '#64748b';
+    fill.style.background = done === total ? '#16a34a' : done > 0 ? '#F26522' : '#64748b';
 
-    // Update cause dots
+    // Update cause dots — derive state from actual results
     const dotsEl = document.getElementById('overall-dots');
     dotsEl.innerHTML = '';
     CAUSES.forEach(c => {
+      // Use live results for the currently selected cause, archived for others
+      const causeResults = c.id === selectedCause ? results : (allResults[c.id] || {});
+      const activeIds = [...ACTIVE[c.id]];
+      const answered = activeIds.filter(id => causeResults[id]);
+      const hasFail = activeIds.some(id => causeResults[id] === 'fail');
+      const allDone = answered.length === activeIds.length && activeIds.length > 0;
+
+      let stateClass = '';
+      if (hasFail)              stateClass = ' failed';
+      else if (allDone)         stateClass = ' complete';
+      else if (answered.length) stateClass = ' partial';
+      else if (c.id === selectedCause) stateClass = ' active';
+
       const dot = document.createElement('div');
-      dot.className = 'cause-dot' +
-        (completedCauses.has(c.id) ? ' complete' : c.id === selectedCause ? ' active' : '');
+      dot.className = 'cause-dot' + stateClass;
       dot.textContent = c.id;
       dot.title = c.label;
       dotsEl.appendChild(dot);
