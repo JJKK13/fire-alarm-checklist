@@ -738,41 +738,33 @@
       width: 28px;
       height: 28px;
       border-radius: 6px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
+      background: #94a3b8;
+      border: 1px solid #64748b;
       font-size: 0.72rem;
       font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--muted);
-      transition: background 0.2s, border-color 0.2s, color 0.2s;
-    }
-
-    .cause-dot.complete {
-      background: rgba(22,163,74,0.15);
-      border-color: #16a34a;
-      color: #15803d;
-    }
-
-    .cause-dot.partial {
-      background: rgba(234,179,8,0.18);
-      border-color: #ca8a04;
-      color: #854d0e;
-      font-weight: 700;
-    }
-
-    .cause-dot.failed {
-      background: rgba(220,38,38,0.2);
-      border-color: #dc2626;
-      color: #991b1b;
-      font-weight: 700;
+      color: #fff;
+      transition: background 0.2s, border-color 0.2s;
     }
 
     .cause-dot.active {
-      background: var(--primary-dim);
-      border-color: var(--primary);
-      color: var(--primary-dark);
+      background: var(--primary);
+      border-color: var(--primary-dark);
+      color: #fff;
+    }
+
+    .cause-dot.complete {
+      background: #16a34a;
+      border-color: #15803d;
+      color: #fff;
+    }
+
+    .cause-dot.failed {
+      background: #dc2626;
+      border-color: #b91c1c;
+      color: #fff;
     }
 
     /* ── Compact cause bar (shown after selection) ── */
@@ -1723,9 +1715,8 @@
       const allDone = answered.length === activeIds.length && activeIds.length > 0;
 
       let stateClass = '';
-      if (hasFail)              stateClass = ' failed';
-      else if (allDone)         stateClass = ' complete';
-      else if (answered.length) stateClass = ' partial';
+      if (allDone && hasFail)        stateClass = ' failed';
+      else if (allDone && !hasFail)  stateClass = ' complete';
       else if (c.id === selectedCause) stateClass = ' active';
 
       const dot = document.createElement('div');
