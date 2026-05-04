@@ -2592,20 +2592,6 @@
     pdf.setFont('helvetica', 'normal');
     pdf.text(`${totalP} effects passed  ·  ${totalF} effects failed  ·  ${completedCauses.size} of ${CAUSES.length} causes completed`, 80, 178);
 
-    // ── Append full matrix as final page (landscape A4) ─────
-    try {
-      const mx = await captureMatrixPage();
-      // Landscape: 297mm wide × 210mm tall
-      pdf.addPage([297, 210], 'landscape');
-      const maxW = 297, maxH = 210;
-      const ratio = Math.min(maxW / (mx.w / 2.0 * 0.2646), maxH / (mx.h / 2.0 * 0.2646));
-      const imgW = (mx.w / 2.0 * 0.2646) * ratio;
-      const imgH = (mx.h / 2.0 * 0.2646) * ratio;
-      pdf.addImage(mx.dataUrl, 'JPEG', (maxW - imgW) / 2, (maxH - imgH) / 2, imgW, imgH);
-    } catch (e) {
-      console.warn('Could not capture matrix:', e);
-    }
-
     return pdf.output('blob');
   }
 
