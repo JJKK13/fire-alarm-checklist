@@ -28,6 +28,7 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      padding-bottom: 60px;
     }
 
     /* ── Header ── */
@@ -968,22 +969,24 @@
 
     #float-submit {
       position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
       background: var(--primary);
       color: #fff;
       border: none;
-      border-radius: 50px;
-      padding: 0.85rem 2rem;
-      font-size: 0.95rem;
+      border-radius: 0;
+      padding: 1rem 2rem;
+      font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 4px 24px rgba(242,101,34,0.4);
+      box-shadow: 0 -4px 20px rgba(242,101,34,0.3);
       z-index: 100;
-      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      transition: background 0.15s;
       letter-spacing: 0.02em;
     }
-    #float-submit:hover { background: var(--primary-dark); transform: scale(1.04); box-shadow: 0 6px 28px rgba(242,101,34,0.5); }
+    #float-submit:hover { background: var(--primary-dark); }
 
     /* ── Submit modal ── */
     #submit-modal {
