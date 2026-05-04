@@ -1209,6 +1209,28 @@
   function selectCause(id) {
     if (selectedCause === id) return;
 
+    // Block switch if any failed effect is missing a reason
+    if (selectedCause) {
+      const activeIds = [...ACTIVE[selectedCause]];
+      const missing = activeIds.filter(fid =>
+        results[fid] === 'fail' && !failReasons[fid]?.trim()
+      );
+      if (missing.length > 0) {
+        const noun = missing.length === 1 ? 'effect' : 'effects';
+        showCompletionBanner('warning',
+          `⚠ Please enter a reason for ${missing.length} failed ${noun} before changing cause.`
+        );
+        missing.forEach(fid =>
+          document.getElementById('fail-reason-' + fid).classList.add('warn-required')
+        );
+        setTimeout(() => {
+          document.getElementById('fail-reason-' + missing[0])
+            .scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+        return;
+      }
+    }
+
     document.querySelectorAll('.cause-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('cause-' + id).classList.add('selected');
 
