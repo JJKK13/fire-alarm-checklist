@@ -2306,12 +2306,12 @@
     const pages = iframe.contentDocument.querySelectorAll('.pr-page');
     for (let i = 0; i < pages.length; i++) {
       const canvas = await html2canvas(pages[i], {
-        scale: 1.8,
+        scale: 1.4,
         useCORS: true,
         backgroundColor: '#ffffff',
         windowWidth: 794,
       });
-      const imgData = canvas.toDataURL('image/jpeg', 0.88);
+      const imgData = canvas.toDataURL('image/jpeg', 0.82);
       const imgH = (canvas.height / canvas.width) * pageW;
       if (i > 0) pdf.addPage();
       pdf.addImage(imgData, 'JPEG', 0, 0, pageW, imgH);
@@ -2470,18 +2470,19 @@
 
       // Attach PDF
       setModalStatus('loading', '&#9203; Attaching PDF report...');
-      const fd = new FormData();
       const testerName = document.getElementById('testerName').value || 'Report';
       const fileName = `FireAlarm_P24136_${testerName.replace(/\s+/g,'-')}_${dateStr}.pdf`;
-      fd.append('file', pdfBlob, fileName);
-      await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments`, {
+      const fd = new FormData();
+      fd.append('file', new File([pdfBlob], fileName, { type: 'application/pdf' }));
+      const attachResp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${SS_API_KEY}`,
-          'Content-Disposition': `attachment; filename="${fileName}"`,
-        },
+        headers: { 'Authorization': `Bearer ${SS_API_KEY}` },
         body: fd,
       });
+      if (!attachResp.ok) {
+        const attachData = await attachResp.json().catch(() => ({}));
+        throw new Error(`PDF attachment failed: ${attachData.message || attachResp.status}`);
+      }
 
       // Clear draft
       localStorage.removeItem(DRAFT_KEY);
