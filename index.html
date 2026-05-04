@@ -792,33 +792,189 @@
 
     .btn-change:hover { background: var(--primary); color: #fff; }
 
-    .btn-submit {
+    /* ── Floating submit button ── */
+    #float-submit {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 0.85rem 2rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 24px rgba(59,130,246,0.45);
+      z-index: 100;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      letter-spacing: 0.02em;
+    }
+    #float-submit:hover { background: var(--primary-dark); transform: scale(1.04); box-shadow: 0 6px 28px rgba(59,130,246,0.55); }
+
+    /* ── Submit modal ── */
+    #submit-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    #submit-modal.open { display: flex; }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h2 { font-size: 1.1rem; font-weight: 700; }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    .modal-summary {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .modal-summary strong { color: var(--text); }
+
+    .modal-section { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .modal-section-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.88rem;
+      width: 100%;
+    }
+    .modal-input:focus { outline: 2px solid var(--primary); }
+
+    .modal-footer {
+      display: flex;
+      gap: 0.8rem;
+      padding-top: 0.5rem;
+    }
+
+    .btn-save-draft {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.7rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .btn-save-draft:hover { border-color: var(--primary); color: var(--primary); }
+
+    .btn-submit-final {
+      flex: 2;
       background: #16a34a;
       border: none;
       color: #fff;
-      border-radius: 6px;
-      padding: 0.4rem 1.1rem;
-      font-size: 0.82rem;
+      border-radius: 8px;
+      padding: 0.7rem;
+      font-size: 0.88rem;
+      font-weight: 700;
       cursor: pointer;
-      font-weight: 600;
       transition: background 0.15s;
-      white-space: nowrap;
     }
-    .btn-submit:hover { background: #15803d; }
-    .btn-submit:disabled { background: var(--muted); cursor: not-allowed; }
+    .btn-submit-final:hover { background: #15803d; }
+    .btn-submit-final:disabled { background: var(--muted); cursor: not-allowed; }
 
-    #submit-status {
-      font-size: 0.8rem;
-      padding: 0.3rem 0.8rem;
+    #modal-status {
+      font-size: 0.82rem;
+      padding: 0.5rem 0.8rem;
       border-radius: 6px;
       display: none;
     }
-    #submit-status.success { background: rgba(22,163,74,0.2); color: #4ade80; display: block; }
-    #submit-status.error   { background: var(--warn-dim); color: #fcd34d; display: block; }
-    #submit-status.loading { background: rgba(100,116,139,0.2); color: var(--muted); display: block; }
+    #modal-status.success { background: rgba(22,163,74,0.2); color: #4ade80; display: block; }
+    #modal-status.error   { background: var(--warn-dim); color: #fcd34d; display: block; }
+    #modal-status.loading { background: rgba(100,116,139,0.2); color: var(--muted); display: block; }
+
+    .draft-banner {
+      background: var(--primary-dim);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      font-size: 0.84rem;
+      color: #93c5fd;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn-restore-draft {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      border-radius: 6px;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-discard-draft {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
 
     @media print {
-      header, .info-bar, .tabs, .cause-group, .toolbar, .note-toggle, .btn-reset, .print-btn { display: none !important; }
+      header, .info-bar, .tabs, .cause-group, .toolbar, .note-toggle, .btn-reset, .print-btn, #float-submit, #submit-modal { display: none !important; }
       body { background: #fff; color: #000; }
       .effect-row { border: 1px solid #ccc; }
       .effect-row.inactive { display: none; }
@@ -916,27 +1072,14 @@
               <div class="progress-text" id="progress-text">0 / 0 verified</div>
             </div>
             <button class="btn-reset" onclick="resetChecks()">Reset</button>
-            <button class="btn-submit" onclick="submitToSmartsheet()">&#8599; Submit to Smartsheet</button>
           </div>
         </div>
-        <div id="submit-status"></div>
         <div id="completion-banner"></div>
         <div class="toolbar">
           <span style="font-size:0.8rem;color:var(--muted);">Active effects shown with checkboxes. Click &#8964; to add notes.</span>
         </div>
         <div id="effects-list"></div>
 
-        <div class="signature-section">
-          <h3>Tester Signature <span class="sig-required-tag">Required to submit</span></h3>
-          <div class="sig-canvas-wrap" id="sigWrap">
-            <canvas id="sigCanvas"></canvas>
-            <div class="sig-placeholder" id="sigPlaceholder">Sign here with finger or mouse</div>
-          </div>
-          <div class="sig-actions">
-            <button class="btn-clear-sig" onclick="clearSignature()">Clear</button>
-            <span class="sig-warn-msg" id="sigWarnMsg">&#9888; Please sign before submitting</span>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -1069,9 +1212,9 @@
     document.querySelectorAll('.cause-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('cause-' + id).classList.add('selected');
 
+    archiveCurrentCause();
     selectedCause = id;
-    results = {};
-    failReasons = {};
+    restoreCause(id);
 
     const cause = CAUSES.find(c => c.id === id);
 
@@ -1091,10 +1234,7 @@
 
     document.getElementById('no-cause').style.display = 'none';
     document.getElementById('checklist-content').style.display = 'block';
-    ensureSigInit();
-
     // Clear previous submit status and banner
-    setStatus('', '');
     showCompletionBanner('', '');
     clearTimeout(advanceTimer);
     updateOverallProgress();
@@ -1537,13 +1677,13 @@
   }
 
   // ── Signature Pad ────────────────────────────────────────
+  // ── Signature Pad ────────────────────────────────────────
   let sigDrawing = false;
   let sigHasData = false;
 
   function initSignatureCanvas() {
     const canvas = document.getElementById('sigCanvas');
     const wrap = document.getElementById('sigWrap');
-    // Set internal resolution to match display (retina-safe)
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
@@ -1551,7 +1691,7 @@
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -1561,19 +1701,29 @@
       return { x: src.clientX - r.left, y: src.clientY - r.top };
     }
 
-    canvas.addEventListener('pointerdown', e => {
+    // Remove old listeners by cloning canvas
+    const newCanvas = canvas.cloneNode(true);
+    canvas.parentNode.replaceChild(newCanvas, canvas);
+    sigHasData = false;
+
+    newCanvas.addEventListener('pointerdown', e => {
       sigDrawing = true;
       const pos = getPos(e);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-      canvas.setPointerCapture(e.pointerId);
+      newCanvas.getContext('2d').beginPath();
+      newCanvas.getContext('2d').moveTo(pos.x, pos.y);
+      newCanvas.setPointerCapture(e.pointerId);
     });
 
-    canvas.addEventListener('pointermove', e => {
+    newCanvas.addEventListener('pointermove', e => {
       if (!sigDrawing) return;
       const pos = getPos(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
+      const c = newCanvas.getContext('2d');
+      c.strokeStyle = '#1e293b';
+      c.lineWidth = 2.5;
+      c.lineCap = 'round';
+      c.lineJoin = 'round';
+      c.lineTo(pos.x, pos.y);
+      c.stroke();
       if (!sigHasData) {
         sigHasData = true;
         document.getElementById('sigPlaceholder').style.display = 'none';
@@ -1582,8 +1732,8 @@
       }
     });
 
-    canvas.addEventListener('pointerup', () => { sigDrawing = false; });
-    canvas.addEventListener('pointerleave', () => { sigDrawing = false; });
+    newCanvas.addEventListener('pointerup', () => { sigDrawing = false; });
+    newCanvas.addEventListener('pointerleave', () => { sigDrawing = false; });
   }
 
   function clearSignature() {
@@ -1594,15 +1744,144 @@
     document.getElementById('sigPlaceholder').style.display = '';
   }
 
-  // Initialise canvas once checklist is first shown
-  let sigInitialised = false;
-  function ensureSigInit() {
-    if (sigInitialised) return;
-    sigInitialised = true;
-    setTimeout(initSignatureCanvas, 50);
+  // ── Per-cause result storage (persists across cause switches) ───
+  let allResults = {};      // { causeId: { effectId: 'pass'|'fail' } }
+  let allFailReasons = {};  // { causeId: { effectId: 'string' } }
+
+  function archiveCurrentCause() {
+    if (!selectedCause) return;
+    allResults[selectedCause] = { ...results };
+    allFailReasons[selectedCause] = { ...failReasons };
   }
 
-  // ── Smartsheet Integration ───────────────────────────────
+  function restoreCause(id) {
+    results = allResults[id] ? { ...allResults[id] } : {};
+    failReasons = allFailReasons[id] ? { ...allFailReasons[id] } : {};
+  }
+
+  // ── Modal ────────────────────────────────────────────────
+  function openSubmitModal() {
+    archiveCurrentCause();
+    const modal = document.getElementById('submit-modal');
+    modal.classList.add('open');
+    updateModalSummary();
+    setModalStatus('', '');
+    setTimeout(() => initSignatureCanvas(), 80);
+  }
+
+  function closeSubmitModal() {
+    document.getElementById('submit-modal').classList.remove('open');
+  }
+
+  function closeSubmitModalOutside(e) {
+    if (e.target === document.getElementById('submit-modal')) closeSubmitModal();
+  }
+
+  function updateModalSummary() {
+    const total = CAUSES.length;
+    const done = completedCauses.size;
+    const allEffectsPassed = Object.values(allResults).flatMap(r => Object.values(r)).filter(v => v === 'pass').length;
+    const allEffectsFailed = Object.values(allResults).flatMap(r => Object.values(r)).filter(v => v === 'fail').length;
+    const tester = document.getElementById('testerName').value || '—';
+    const company = document.getElementById('testerCompany').value || '—';
+    const date = document.getElementById('testDate').value || '—';
+    document.getElementById('modal-summary').innerHTML =
+      `<strong>Project:</strong> P24136 — Mastercard Two South County<br>` +
+      `<strong>Tester:</strong> ${tester} &nbsp;|&nbsp; <strong>Company:</strong> ${company} &nbsp;|&nbsp; <strong>Date:</strong> ${date}<br>` +
+      `<strong>Causes complete:</strong> ${done} / ${total} &nbsp;|&nbsp; ` +
+      `<strong>Effects:</strong> ${allEffectsPassed} Pass &nbsp; ${allEffectsFailed} Fail`;
+  }
+
+  // ── Draft (localStorage) ─────────────────────────────────
+  const DRAFT_KEY = 'fa_draft_p24136';
+
+  function saveDraft() {
+    archiveCurrentCause();
+    const draft = {
+      testerCompany: document.getElementById('testerCompany').value,
+      testerName: document.getElementById('testerName').value,
+      testDate: document.getElementById('testDate').value,
+      selectedCause,
+      completedCauses: [...completedCauses],
+      allResults,
+      allFailReasons,
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    setModalStatus('success', '&#128190; Draft saved — you can close the browser and resume later on this device.');
+  }
+
+  function loadDraftIfExists() {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (!saved) return;
+    try {
+      const draft = JSON.parse(saved);
+      const banner = document.createElement('div');
+      banner.className = 'draft-banner';
+      banner.id = 'draft-banner';
+      banner.innerHTML =
+        `&#128190; Saved draft found — ${draft.testerName || 'Unknown'} (${draft.testerCompany || '?'}), ${draft.testDate || '?'} — ${(draft.completedCauses||[]).length} causes complete.
+        <span style="display:flex;gap:0.5rem">
+          <button class="btn-restore-draft" onclick="restoreDraft()">Resume</button>
+          <button class="btn-discard-draft" onclick="discardDraft()">Discard</button>
+        </span>`;
+      document.getElementById('overall-progress').insertAdjacentElement('beforebegin', banner);
+    } catch (_) {}
+  }
+
+  function restoreDraft() {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (!saved) return;
+    const draft = JSON.parse(saved);
+    document.getElementById('testerCompany').value = draft.testerCompany || '';
+    document.getElementById('testerName').value = draft.testerName || '';
+    document.getElementById('testDate').value = draft.testDate || '';
+    allResults = draft.allResults || {};
+    allFailReasons = draft.allFailReasons || {};
+    completedCauses = new Set(draft.completedCauses || []);
+    updateOverallProgress();
+    document.getElementById('draft-banner')?.remove();
+    if (draft.selectedCause) selectCause(draft.selectedCause);
+  }
+
+  function discardDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+    document.getElementById('draft-banner')?.remove();
+  }
+
+  // ── Email ─────────────────────────────────────────────────
+  function sendEmail(email, testRef, overallResult) {
+    const tester = document.getElementById('testerName').value || '';
+    const company = document.getElementById('testerCompany').value || '';
+    const date = document.getElementById('testDate').value || '';
+
+    let body = `Fire Alarm Cause & Effect Test Results\n`;
+    body += `Project: P24136 — Mastercard Two South County\n`;
+    body += `Reference: ${testRef}\n`;
+    body += `Date: ${date}   Tester: ${tester} (${company})\n`;
+    body += `Overall Result: ${overallResult}\n\n`;
+
+    CAUSES.forEach(c => {
+      const causeResults = allResults[c.id];
+      if (!causeResults || Object.keys(causeResults).length === 0) return;
+      const activeIds = [...ACTIVE[c.id]];
+      const pass = activeIds.filter(id => causeResults[id] === 'pass').length;
+      const fail = activeIds.filter(id => causeResults[id] === 'fail').length;
+      body += `Cause ${c.id}: ${c.label}\n`;
+      body += `  Pass: ${pass}  Fail: ${fail}  Total: ${activeIds.length}\n`;
+      activeIds.filter(id => causeResults[id] === 'fail').forEach(id => {
+        const e = EFFECTS.find(ef => ef.id === id);
+        const reason = (allFailReasons[c.id] || {})[id] || 'No reason given';
+        body += `  [FAIL] ${e.num}. ${e.label}\n         Reason: ${reason}\n`;
+      });
+      body += '\n';
+    });
+
+    const subject = encodeURIComponent(`Fire Alarm Test Results — ${testRef}`);
+    const mailBody = encodeURIComponent(body.substring(0, 1800)); // mailto URL limit
+    window.open(`mailto:${email}?subject=${subject}&body=${mailBody}`);
+  }
+
+  // ── Final submission ──────────────────────────────────────
   const SS_API_KEY = '6w2Hf1f78c7DrDUjfFrZCtPtvKjYcxXHhTtzb';
   const SS_SHEET_ID = '888957469413252';
   const SS_COLS = {
@@ -1620,118 +1899,147 @@
     notes:          4455334633836420,
   };
 
-  async function submitToSmartsheet() {
-    // Validate signature
+  async function submitComplete() {
     if (!sigHasData) {
       document.getElementById('sigWrap').classList.add('warn');
       document.getElementById('sigWarnMsg').classList.add('show');
-      document.getElementById('sigWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
-    if (!selectedCause) {
-      setStatus('error', 'Please select a trigger cause first.');
+    archiveCurrentCause();
+    if (Object.keys(allResults).length === 0) {
+      setModalStatus('error', 'No results recorded yet. Please complete at least one cause first.');
       return;
     }
 
-    const cause = CAUSES.find(c => c.id === selectedCause);
-    const activeSet = ACTIVE[selectedCause];
-    const total = activeSet.size;
-    const passed = [...activeSet].filter(id => results[id] === 'pass').length;
-    const failed = [...activeSet].filter(id => results[id] === 'fail').length;
-    const done = passed + failed;
-    const overallResult = done < total ? 'Incomplete' : failed > 0 ? 'Fail' : 'Pass';
-
-    // Build effect detail string
-    const effectDetail = [...activeSet].map(id => {
-      const e = EFFECTS.find(ef => ef.id === id);
-      const r = results[id];
-      const prefix = r === 'pass' ? '[PASS]' : r === 'fail' ? '[FAIL]' : '[----]';
-      const reason = r === 'fail' && failReasons[id] ? ` — ${failReasons[id]}` : '';
-      return `${prefix} ${e.num}. ${e.label}${reason}`;
-    }).join('\n');
-
-    // Combine fail reasons as notes
-    const allNotes = [...activeSet]
-      .filter(id => results[id] === 'fail' && failReasons[id] && failReasons[id].trim())
-      .map(id => {
+    // Aggregate results across all tested causes
+    let totalEffects = 0, totalPassed = 0, totalFailed = 0;
+    const detailLines = [], noteLines = [];
+    CAUSES.forEach(c => {
+      const cr = allResults[c.id];
+      if (!cr || !Object.keys(cr).length) return;
+      [...ACTIVE[c.id]].forEach(id => {
+        totalEffects++;
+        const r = cr[id];
+        if (r === 'pass') totalPassed++;
+        if (r === 'fail') totalFailed++;
         const e = EFFECTS.find(ef => ef.id === id);
-        return `Effect ${e.num}: ${failReasons[id].trim()}`;
-      }).join(' | ');
+        const pfx = r === 'pass' ? '[PASS]' : r === 'fail' ? '[FAIL]' : '[----]';
+        const rsn = (r === 'fail' && (allFailReasons[c.id]||{})[id]) ? ` — ${(allFailReasons[c.id]||{})[id]}` : '';
+        detailLines.push(`${c.id}: ${pfx} ${e.num}. ${e.label}${rsn}`);
+        if (r === 'fail' && (allFailReasons[c.id]||{})[id])
+          noteLines.push(`Cause ${c.id} / Effect ${e.num}: ${(allFailReasons[c.id]||{})[id]}`);
+      });
+    });
 
-    // Test reference: e.g. TEST-C-2026-05-04
+    const overallResult = totalFailed > 0 ? 'Fail' : totalPassed === totalEffects ? 'Pass' : 'Incomplete';
     const dateStr = document.getElementById('testDate').value || new Date().toISOString().split('T')[0];
-    const testRef = `TEST-${selectedCause}-${dateStr}`;
+    const testerName = document.getElementById('testerName').value || '';
+    const testRef = `TEST-${dateStr}-${testerName.split(' ')[0] || 'Unknown'}`;
 
     const cells = [
       { columnId: SS_COLS.testRef,         value: testRef },
       { columnId: SS_COLS.testDate,        value: dateStr },
-      { columnId: SS_COLS.testerName,      value: document.getElementById('testerName').value || '' },
+      { columnId: SS_COLS.testerName,      value: testerName },
       { columnId: SS_COLS.witness,         value: document.getElementById('testerCompany').value || '' },
-      { columnId: SS_COLS.causeId,         value: selectedCause },
-      { columnId: SS_COLS.causeDesc,       value: cause.label },
-      { columnId: SS_COLS.area,            value: cause.area },
-      { columnId: SS_COLS.effectsRequired, value: total },
-      { columnId: SS_COLS.effectsVerified, value: passed },
+      { columnId: SS_COLS.causeId,         value: [...completedCauses].join(', ') || selectedCause || '' },
+      { columnId: SS_COLS.causeDesc,       value: `${completedCauses.size} of ${CAUSES.length} causes tested` },
+      { columnId: SS_COLS.area,            value: 'Multiple' },
+      { columnId: SS_COLS.effectsRequired, value: totalEffects },
+      { columnId: SS_COLS.effectsVerified, value: totalPassed },
       { columnId: SS_COLS.result,          value: overallResult },
-      { columnId: SS_COLS.effectDetail,    value: effectDetail },
-      { columnId: SS_COLS.notes,           value: allNotes },
+      { columnId: SS_COLS.effectDetail,    value: detailLines.join('\n') },
+      { columnId: SS_COLS.notes,           value: noteLines.join(' | ') },
     ];
 
-    setStatus('loading', 'Submitting to Smartsheet...');
-    document.querySelector('.btn-submit').disabled = true;
+    setModalStatus('loading', 'Submitting to Smartsheet...');
+    document.getElementById('btn-submit-final').disabled = true;
 
     try {
       const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${SS_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${SS_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify([{ cells }]),
       });
-
       const data = await resp.json();
 
       if (resp.ok && data.resultCode === 0) {
         const rowId = data.result[0].id;
-        // Attach signature image to the row
+        // Attach signature
         try {
           const canvas = document.getElementById('sigCanvas');
-          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-          const formData = new FormData();
-          formData.append('file', blob, 'signature.png');
+          const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+          const fd = new FormData();
+          fd.append('file', blob, 'signature.png');
           await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments`, {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${SS_API_KEY}`,
-              'Content-Disposition': 'attachment; filename="signature.png"',
-            },
-            body: formData,
+            headers: { 'Authorization': `Bearer ${SS_API_KEY}`, 'Content-Disposition': 'attachment; filename="signature.png"' },
+            body: fd,
           });
-        } catch (_) { /* signature attach failure is non-fatal */ }
+        } catch (_) {}
 
-        setStatus('success', `Submitted — ${testRef} logged to Smartsheet. ${passed} Pass, ${failed} Fail, ${total - done} outstanding. Result: ${overallResult}.`);
+        // Clear draft
+        localStorage.removeItem(DRAFT_KEY);
+        document.getElementById('draft-banner')?.remove();
+
+        // Send email if provided
+        const email = document.getElementById('emailTo').value.trim();
+        if (email) sendEmail(email, testRef, overallResult);
+
+        setModalStatus('success', `&#10003; Submitted — ${testRef} logged to Smartsheet. ${totalPassed} Pass, ${totalFailed} Fail across ${completedCauses.size} causes. Result: ${overallResult}.${email ? ' Email sent.' : ''}`);
       } else {
-        const msg = data.message || 'Unknown error';
-        setStatus('error', `Smartsheet error: ${msg}. Check your API key is correct.`);
+        setModalStatus('error', `Smartsheet error: ${data.message || 'Unknown error'}`);
       }
     } catch (err) {
-      setStatus('error', `Network error: ${err.message}. Check your internet connection.`);
+      setModalStatus('error', `Network error: ${err.message}`);
     } finally {
-      document.querySelector('.btn-submit').disabled = false;
+      document.getElementById('btn-submit-final').disabled = false;
     }
   }
 
-  function setStatus(type, msg) {
-    const el = document.getElementById('submit-status');
+  function setModalStatus(type, msg) {
+    const el = document.getElementById('modal-status');
     el.className = type;
-    el.textContent = msg;
+    el.innerHTML = msg;
   }
 
   // ── Init ─────────────────────────────────────────────────
   buildCauseButtons();
   updateOverallProgress();
+  loadDraftIfExists();
 </script>
+<!-- Floating submit button -->
+<button id="float-submit" onclick="openSubmitModal()">Submit Results</button>
+
+<!-- Submit modal -->
+<div id="submit-modal" onclick="closeSubmitModalOutside(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Submit Test Results</h2>
+      <button class="modal-close" onclick="closeSubmitModal()">&#10005;</button>
+    </div>
+    <div id="modal-summary" class="modal-summary"></div>
+    <div class="modal-section">
+      <div class="modal-section-label">Tester Signature <span class="sig-required-tag">Required</span></div>
+      <div class="sig-canvas-wrap" id="sigWrap">
+        <canvas id="sigCanvas"></canvas>
+        <div class="sig-placeholder" id="sigPlaceholder">Sign here with finger or mouse</div>
+      </div>
+      <div class="sig-actions">
+        <button class="btn-clear-sig" onclick="clearSignature()">Clear</button>
+        <span class="sig-warn-msg" id="sigWarnMsg">&#9888; Please sign before submitting</span>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-label">Email Results <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+      <input type="email" id="emailTo" class="modal-input" placeholder="Enter email address">
+    </div>
+    <div id="modal-status"></div>
+    <div class="modal-footer">
+      <button class="btn-save-draft" onclick="saveDraft()">&#128190; Save Draft</button>
+      <button class="btn-submit-final" id="btn-submit-final" onclick="submitComplete()">&#10003; Submit Complete</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
