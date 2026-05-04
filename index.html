@@ -2307,10 +2307,15 @@
   const SS_API_KEY = '6w2Hf1f78c7DrDUjfFrZCtPtvKjYcxXHhTtzb';
   const SS_SHEET_ID = '888957469413252';
   const SS_COLS = {
-    testDate:   1640584866729860,
-    testerName: 6144184494100356,
-    company:    3892384680415108,
-    result:     2203534820151172,
+    project:         7270084400942980,
+    testDate:        1640584866729860,
+    testerName:      6144184494100356,
+    company:         3892384680415108,
+    result:          2203534820151172,
+    causesComplete:  6980171960979332,
+    effectsPassed:   1350672426766212,
+    effectsFailed:   5854272054136708,
+    totalEffects:    3602472240451460,
   };
 
   // ── PDF generation ───────────────────────────────────────
@@ -2634,15 +2639,25 @@
       return;
     }
 
+    const testerName = document.getElementById('testerName').value || 'Report';
+    const fileName = `FireAlarm_P24136_${testerName.replace(/\s+/g,'-')}_${dateStr}.pdf`;
+
     // ── Step 1: Add row ──────────────────────────────────────
     setModalStatus('loading', '&#9203; Step 1/2 — Adding row to Smartsheet...');
     let rowId;
     try {
+      const totalActive = CAUSES.reduce((s, c) => s + ACTIVE[c.id].size, 0);
+      const causesCompleteCount = [...completedCauses].length;
       const cells = [
-        { columnId: SS_COLS.company,    value: document.getElementById('testerCompany').value || '' },
-        { columnId: SS_COLS.testerName, value: document.getElementById('testerName').value || '' },
-        { columnId: SS_COLS.testDate,   value: dateStr },
-        { columnId: SS_COLS.result,     value: overallResult },
+        { columnId: SS_COLS.project,        value: fileName },
+        { columnId: SS_COLS.company,        value: document.getElementById('testerCompany').value || '' },
+        { columnId: SS_COLS.testerName,     value: document.getElementById('testerName').value || '' },
+        { columnId: SS_COLS.testDate,       value: dateStr },
+        { columnId: SS_COLS.result,         value: overallResult },
+        { columnId: SS_COLS.causesComplete, value: `${causesCompleteCount} of ${CAUSES.length}` },
+        { columnId: SS_COLS.effectsPassed,  value: totalPassed },
+        { columnId: SS_COLS.effectsFailed,  value: totalFailed },
+        { columnId: SS_COLS.totalEffects,   value: totalActive },
       ];
       const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows?access_token=${SS_API_KEY}`, {
         method: 'POST',
@@ -2663,8 +2678,6 @@
 
     // ── Step 2: Attach PDF ───────────────────────────────────
     setModalStatus('loading', '&#9203; Step 2/2 — Attaching PDF report...');
-    const testerName = document.getElementById('testerName').value || 'Report';
-    const fileName = `FireAlarm_P24136_${testerName.replace(/\s+/g,'-')}_${dateStr}.pdf`;
     try {
       const fd = new FormData();
       fd.append('file', new File([pdfBlob], fileName, { type: 'application/pdf' }));
