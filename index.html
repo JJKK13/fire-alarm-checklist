@@ -189,6 +189,49 @@
       color: #fff;
     }
 
+    .cause-btn.btn-complete {
+      background: rgba(22,163,74,0.1);
+      border-color: #16a34a;
+    }
+    .cause-btn.btn-complete .badge {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .cause-btn.btn-failed {
+      background: rgba(220,38,38,0.08);
+      border-color: #dc2626;
+    }
+    .cause-btn.btn-failed .badge {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    /* Legend */
+    .cause-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 0.8rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .legend-swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      flex-shrink: 0;
+    }
+
     /* ── Checklist panel ── */
     #checklist-panel { margin-top: 1.5rem; }
 
@@ -1067,6 +1110,23 @@
       <div class="cause-grid" id="causeGrid-lta"></div>
     </div>
 
+    <!-- Legend -->
+    <div class="cause-legend">
+      <span style="font-weight:600;color:var(--text)">Key:</span>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#94a3b8;border-color:#64748b"></div>
+        <span>Not started / In progress</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:rgba(22,163,74,0.1);border-color:#16a34a"></div>
+        <span>All effects — Pass</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:rgba(220,38,38,0.08);border-color:#dc2626"></div>
+        <span>Complete — one or more Fail</span>
+      </div>
+    </div>
+
     <!-- Compact bar shown after a cause is selected -->
     <div id="cause-compact">
       <div class="cause-compact-bar">
@@ -1303,7 +1363,7 @@
     // Clear previous submit status and banner
     showCompletionBanner('', '');
     clearTimeout(advanceTimer);
-    updateOverallProgress();
+    updateOverallProgress(); updateCauseButtonStates();
 
     renderEffects();
     updateProgress();
@@ -1517,7 +1577,7 @@
     completedCauses.delete(selectedCause);
     renderEffects();
     updateProgress();
-    updateOverallProgress();
+    updateOverallProgress(); updateCauseButtonStates();
   }
 
   // ── Matrix view ──────────────────────────────────────────
@@ -1641,7 +1701,7 @@
     const allAnswered = activeIds.every(id => results[id]);
     if (!allAnswered) {
       showCompletionBanner('', '');
-      updateOverallProgress();
+      updateOverallProgress(); updateCauseButtonStates();
       return;
     }
 
@@ -1669,7 +1729,7 @@
 
     // Mark current cause complete and update overall progress
     completedCauses.add(selectedCause);
-    updateOverallProgress();
+    updateOverallProgress(); updateCauseButtonStates();
 
     // All complete and valid — advance to next cause
     const causeIds = CAUSES.map(c => c.id);
@@ -1691,6 +1751,22 @@
     const el = document.getElementById('completion-banner');
     el.className = type;
     el.textContent = msg;
+  }
+
+  function updateCauseButtonStates() {
+    CAUSES.forEach(c => {
+      const btn = document.getElementById('cause-' + c.id);
+      if (!btn) return;
+      const causeResults = c.id === selectedCause ? results : (allResults[c.id] || {});
+      const activeIds = [...ACTIVE[c.id]];
+      const answered = activeIds.filter(id => causeResults[id]);
+      const allDone = answered.length === activeIds.length && activeIds.length > 0;
+      const hasFail = activeIds.some(id => causeResults[id] === 'fail');
+
+      btn.classList.remove('btn-complete', 'btn-failed');
+      if (allDone && !hasFail) btn.classList.add('btn-complete');
+      else if (allDone && hasFail) btn.classList.add('btn-failed');
+    });
   }
 
   function updateOverallProgress() {
@@ -1890,7 +1966,7 @@
     allResults = draft.allResults || {};
     allFailReasons = draft.allFailReasons || {};
     completedCauses = new Set(draft.completedCauses || []);
-    updateOverallProgress();
+    updateOverallProgress(); updateCauseButtonStates();
     document.getElementById('draft-banner')?.remove();
     if (draft.selectedCause) selectCause(draft.selectedCause);
   }
