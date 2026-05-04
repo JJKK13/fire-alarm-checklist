@@ -482,6 +482,35 @@
       color: #92400e;
     }
 
+    /* ── Next cause button ── */
+    #next-cause-wrap {
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-next-cause {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.9rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      letter-spacing: 0.01em;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-next-cause:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-next-cause.btn-submit-style { background: #16a34a; }
+    .btn-next-cause.btn-submit-style:hover { background: #15803d; }
+
     /* ── Signature pad ── */
     .signature-section {
       margin-top: 1.5rem;
@@ -1185,6 +1214,9 @@
           <span style="font-size:0.8rem;color:var(--muted);">Active effects are highlighted — select Pass or Fail for each.</span>
         </div>
         <div id="effects-list"></div>
+        <div id="next-cause-wrap" style="display:none">
+          <button id="next-cause-btn" class="btn-next-cause" onclick="goNextCause()"></button>
+        </div>
 
       </div>
     </div>
@@ -1383,8 +1415,9 @@
 
     document.getElementById('no-cause').style.display = 'none';
     document.getElementById('checklist-content').style.display = 'block';
-    // Clear previous submit status and banner
+    // Clear previous submit status, banner and next button
     showCompletionBanner('', '');
+    hideNextCauseBtn();
     clearTimeout(advanceTimer);
     updateOverallProgress(); updateCauseButtonStates();
 
@@ -1598,6 +1631,8 @@
     results = {};
     failReasons = {};
     completedCauses.delete(selectedCause);
+    hideNextCauseBtn();
+    showCompletionBanner('', '');
     renderEffects();
     updateProgress();
     updateOverallProgress(); updateCauseButtonStates();
@@ -1714,16 +1749,43 @@
 
   // ── Auto-advance logic ───────────────────────────────────
   let advanceTimer = null;
+  let _nextCauseId = null;
+
+  function goNextCause() {
+    if (_nextCauseId) selectCause(_nextCauseId);
+    else openSubmitModal();
+  }
+
+  function showNextCauseBtn(nextId) {
+    _nextCauseId = nextId;
+    const wrap = document.getElementById('next-cause-wrap');
+    const btn  = document.getElementById('next-cause-btn');
+    wrap.style.display = 'block';
+    if (nextId) {
+      const next = CAUSES.find(c => c.id === nextId);
+      btn.className = 'btn-next-cause';
+      btn.innerHTML = `Next: <strong>${nextId} — ${next.label}</strong> &rarr;`;
+    } else {
+      btn.className = 'btn-next-cause btn-submit-style';
+      btn.innerHTML = `&#10003; All causes complete — Submit Results`;
+    }
+  }
+
+  function hideNextCauseBtn() {
+    _nextCauseId = null;
+    document.getElementById('next-cause-wrap').style.display = 'none';
+  }
 
   function checkAllAnswered() {
     if (!selectedCause) return;
     const activeSet = ACTIVE[selectedCause];
     const activeIds = [...activeSet];
 
-    // Not all answered yet — hide banner, but still refresh dots
+    // Not all answered yet — hide banner and next button, refresh dots
     const allAnswered = activeIds.every(id => results[id]);
     if (!allAnswered) {
       showCompletionBanner('', '');
+      hideNextCauseBtn();
       updateOverallProgress(); updateCauseButtonStates();
       return;
     }
@@ -1759,15 +1821,11 @@
     const nextId = causeIds[causeIds.indexOf(selectedCause) + 1];
 
     if (nextId) {
-      const nextCause = CAUSES.find(c => c.id === nextId);
-      showCompletionBanner('success',
-        `✓ Cause ${selectedCause} complete — select Cause ${nextId}: ${nextCause.label} when ready.`
-      );
+      showCompletionBanner('success', `✓ Cause ${selectedCause} complete.`);
     } else {
-      showCompletionBanner('success',
-        `✓ All causes completed! Use the Submit to Smartsheet button to log your results.`
-      );
+      showCompletionBanner('success', `✓ All causes completed!`);
     }
+    showNextCauseBtn(nextId || null);
   }
 
   function showCompletionBanner(type, msg) {
