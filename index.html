@@ -2382,15 +2382,17 @@
     pdf.text(lines, 14, 152);
 
     // Overall result box
-    let totalP = 0, totalF = 0;
+    let totalP = 0, totalF = 0, totalActive = 0;
     CAUSES.forEach(c => {
       const cr = allResults[c.id] || {};
-      [...ACTIVE[c.id]].forEach(id => {
+      const activeIds = [...ACTIVE[c.id]];
+      totalActive += activeIds.length;
+      activeIds.forEach(id => {
         if (cr[id] === 'pass') totalP++;
         if (cr[id] === 'fail') totalF++;
       });
     });
-    const overallResult = totalF > 0 ? 'FAIL' : totalP > 0 ? 'PASS' : 'INCOMPLETE';
+    const overallResult = totalF > 0 ? 'FAIL' : (totalP + totalF) === totalActive ? 'PASS' : 'INCOMPLETE';
     const rColor = overallResult === 'PASS' ? [22, 163, 74] : overallResult === 'FAIL' ? [220, 38, 38] : [100, 116, 139];
     pdf.setFillColor(...rColor);
     pdf.roundedRect(14, 165, 60, 20, 3, 3, 'F');
