@@ -79,6 +79,15 @@
 
     .info-bar select:focus { outline: 2px solid var(--primary); }
 
+    .info-bar .required-label::after { content: ' *'; color: var(--primary); }
+
+    .info-bar .field-error select,
+    .info-bar .field-error input {
+      border-color: var(--primary);
+      outline: 2px solid var(--primary);
+      animation: shake 0.3s ease;
+    }
+
     .info-bar input {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -585,7 +594,15 @@
       min-width: 220px;
     }
 
-    .matrix-table th.cause-col { min-width: 70px; font-size: 0.65rem; }
+    .matrix-table th.cause-col {
+      min-width: 28px;
+      font-size: 0.68rem;
+      writing-mode: vertical-rl;
+      white-space: nowrap;
+      padding: 0.5rem 0.25rem;
+      vertical-align: bottom;
+      font-weight: 600;
+    }
 
     .matrix-table td.cat-cell {
       writing-mode: vertical-rl;
@@ -1000,15 +1017,15 @@
 </header>
 
 <div class="info-bar">
-  <div><label>Company:</label><select id="testerCompany">
+  <div id="wrap-company"><label class="required-label">Company:</label><select id="testerCompany">
     <option value="">Select company...</option>
     <option>Axis Engineering</option>
     <option>Jones Electrical</option>
     <option>Maurice Johnson &amp; Partners</option>
     <option>T&amp;I Fitouts</option>
   </select></div>
-  <div><label>Tester Name:</label><input type="text" id="testerName" placeholder="Enter name"></div>
-  <div><label>Date of Test:</label><input type="date" id="testDate"></div>
+  <div id="wrap-name"><label class="required-label">Tester Name:</label><input type="text" id="testerName" placeholder="Enter name"></div>
+  <div id="wrap-date"><label class="required-label">Date of Test:</label><input type="date" id="testDate"></div>
 <button class="print-btn" onclick="window.print()">&#128438; Print / Save PDF</button>
 </div>
 
@@ -1206,8 +1223,29 @@
   }
 
   // ── Select cause ─────────────────────────────────────────
+  function validateInfoFields() {
+    const fields = [
+      { id: 'testerCompany', wrap: 'wrap-company', val: () => document.getElementById('testerCompany').value },
+      { id: 'testerName',    wrap: 'wrap-name',    val: () => document.getElementById('testerName').value.trim() },
+      { id: 'testDate',      wrap: 'wrap-date',    val: () => document.getElementById('testDate').value },
+    ];
+    let missing = false;
+    fields.forEach(f => {
+      const wrap = document.getElementById(f.wrap);
+      if (!f.val()) { wrap.classList.add('field-error'); missing = true; }
+      else wrap.classList.remove('field-error');
+    });
+    if (missing) {
+      document.querySelector('.info-bar').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return !missing;
+  }
+
   function selectCause(id) {
     if (selectedCause === id) return;
+
+    // Require info fields before first cause selection
+    if (!validateInfoFields()) return;
 
     // Block switch if any failed effect is missing a reason
     if (selectedCause) {
@@ -1493,15 +1531,15 @@
     // Group headers
     const extTh = document.createElement('th');
     extTh.colSpan = 4;
-    extTh.style.background = 'rgba(220,38,38,0.15)';
-    extTh.style.color = '#f87171';
+    extTh.style.background = 'rgba(242,101,34,0.12)';
+    extTh.style.color = '#c94f15';
     extTh.textContent = 'External Carpark';
     headRow1.appendChild(extTh);
 
     const ltaTh = document.createElement('th');
     ltaTh.colSpan = 11;
-    ltaTh.style.background = 'rgba(37,99,235,0.15)';
-    ltaTh.style.color = '#93c5fd';
+    ltaTh.style.background = 'rgba(22,163,74,0.1)';
+    ltaTh.style.color = '#15803d';
     ltaTh.textContent = 'Landlord / Tenant Areas';
     headRow1.appendChild(ltaTh);
 
@@ -1519,8 +1557,7 @@
     CAUSES.forEach(c => {
       const th = document.createElement('th');
       th.className = 'cause-col';
-      th.title = c.label;
-      th.innerHTML = `<strong>${c.id}</strong>`;
+      th.textContent = `${c.id} — ${c.label}`;
       headRow2.appendChild(th);
     });
 
@@ -2004,6 +2041,14 @@
   buildCauseButtons();
   updateOverallProgress();
   loadDraftIfExists();
+
+  // Clear field-error highlight as soon as user fills in a required field
+  ['testerCompany', 'testerName', 'testDate'].forEach(id => {
+    const el = document.getElementById(id);
+    const wrap = el.closest('[id^="wrap-"]');
+    el.addEventListener('change', () => { if (el.value.trim()) wrap.classList.remove('field-error'); });
+    el.addEventListener('input',  () => { if (el.value.trim()) wrap.classList.remove('field-error'); });
+  });
 </script>
 <!-- Floating submit button -->
 <button id="float-submit" onclick="openSubmitModal()">Submit Results</button>
