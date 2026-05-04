@@ -1092,7 +1092,7 @@
     }
 
     @media print {
-      header, .info-bar, .tabs, .cause-group, .toolbar, .note-toggle, .btn-reset, .print-btn, #float-submit, #submit-modal { display: none !important; }
+      header, .info-bar, .tabs, .cause-group, .toolbar, .note-toggle, .btn-reset, #float-submit, #submit-modal { display: none !important; }
       body { background: #fff; color: #000; }
       .effect-row { border: 1px solid #ccc; }
       .effect-row.inactive { display: none; }
@@ -1127,7 +1127,6 @@
   </select></div>
   <div id="wrap-name"><label class="required-label">Tester Name:</label><input type="text" id="testerName" placeholder="Enter name"></div>
   <div id="wrap-date"><label class="required-label">Date of Test:</label><input type="date" id="testDate"></div>
-<button class="print-btn" onclick="window.print()">&#128438; Print / Save PDF</button>
 </div>
 
 <main>
@@ -2255,6 +2254,7 @@
     <div class="modal-footer">
       <button class="btn-save-draft" onclick="saveDraft()">&#128190; Save Draft</button>
       <button class="btn-submit-final" id="btn-submit-final" onclick="submitComplete()">&#10003; Submit Complete</button>
+      <button class="print-btn" onclick="window.print()" style="flex:1">&#128438; Print / PDF</button>
     </div>
   </div>
 </div>
