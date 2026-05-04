@@ -1867,8 +1867,12 @@
   let _nextCauseId = null;
 
   function goNextCause() {
-    if (_nextCauseId) selectCause(_nextCauseId);
-    else openSubmitModal();
+    if (_nextCauseId) {
+      selectCause(_nextCauseId);
+      document.getElementById('effects-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      openSubmitModal();
+    }
   }
 
   function showNextCauseBtn(nextId) {
