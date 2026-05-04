@@ -2634,36 +2634,39 @@
       return;
     }
 
-    setModalStatus('loading', '&#9203; Submitting to Smartsheet...');
-
+    // ── Step 1: Add row ──────────────────────────────────────
+    setModalStatus('loading', '&#9203; Step 1/2 — Adding row to Smartsheet...');
+    let rowId;
     try {
-      // Add row with 4 columns
       const cells = [
         { columnId: SS_COLS.company,    value: document.getElementById('testerCompany').value || '' },
         { columnId: SS_COLS.testerName, value: document.getElementById('testerName').value || '' },
         { columnId: SS_COLS.testDate,   value: dateStr },
         { columnId: SS_COLS.result,     value: overallResult },
       ];
-
       const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${SS_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify([{ cells }]),
       });
       const data = await resp.json();
-
       if (!resp.ok || data.resultCode !== 0) {
-        setModalStatus('error', `Smartsheet error: ${data.message || 'Unknown error'}`);
+        setModalStatus('error', `Smartsheet row error: ${data.message || resp.status}`);
         document.getElementById('btn-submit-final').disabled = false;
         return;
       }
+      rowId = data.result[0].id;
+    } catch (err) {
+      setModalStatus('error', `Row submission failed — check your network connection. (${err.message})`);
+      document.getElementById('btn-submit-final').disabled = false;
+      return;
+    }
 
-      const rowId = data.result[0].id;
-
-      // Attach PDF
-      setModalStatus('loading', '&#9203; Attaching PDF report...');
-      const testerName = document.getElementById('testerName').value || 'Report';
-      const fileName = `FireAlarm_P24136_${testerName.replace(/\s+/g,'-')}_${dateStr}.pdf`;
+    // ── Step 2: Attach PDF ───────────────────────────────────
+    setModalStatus('loading', '&#9203; Step 2/2 — Attaching PDF report...');
+    const testerName = document.getElementById('testerName').value || 'Report';
+    const fileName = `FireAlarm_P24136_${testerName.replace(/\s+/g,'-')}_${dateStr}.pdf`;
+    try {
       const fd = new FormData();
       fd.append('file', new File([pdfBlob], fileName, { type: 'application/pdf' }));
       const attachResp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments`, {
@@ -2673,23 +2676,25 @@
       });
       if (!attachResp.ok) {
         const attachData = await attachResp.json().catch(() => ({}));
-        throw new Error(`PDF attachment failed: ${attachData.message || attachResp.status}`);
+        setModalStatus('error', `Row added but PDF attachment failed: ${attachData.message || attachResp.status}`);
+        document.getElementById('btn-submit-final').disabled = false;
+        return;
       }
-
-      // Clear draft
-      localStorage.removeItem(DRAFT_KEY);
-      document.getElementById('draft-banner')?.remove();
-
-      // Send email if provided
-      const email = document.getElementById('emailTo').value.trim();
-      if (email) sendEmail(email, fileName.replace('.pdf',''), overallResult);
-
-      setModalStatus('success', `&#10003; Submitted — ${overallResult} result logged to Smartsheet with PDF attached. ${totalPassed} Pass, ${totalFailed} Fail across ${completedCauses.size} causes.${email ? ' Email sent.' : ''}`);
     } catch (err) {
-      setModalStatus('error', `Network error: ${err.message}`);
-    } finally {
+      setModalStatus('error', `Row added but PDF upload failed — check your network connection. (${err.message})`);
       document.getElementById('btn-submit-final').disabled = false;
+      return;
     }
+
+    // ── Done ─────────────────────────────────────────────────
+    localStorage.removeItem(DRAFT_KEY);
+    document.getElementById('draft-banner')?.remove();
+
+    const email = document.getElementById('emailTo').value.trim();
+    if (email) sendEmail(email, fileName.replace('.pdf',''), overallResult);
+
+    setModalStatus('success', `&#10003; Submitted — ${overallResult} result logged to Smartsheet with PDF attached. ${totalPassed} Pass, ${totalFailed} Fail across ${completedCauses.size} causes.${email ? ' Email sent.' : ''}`);
+    document.getElementById('btn-submit-final').disabled = false;
   }
 
   function setModalStatus(type, msg) {
