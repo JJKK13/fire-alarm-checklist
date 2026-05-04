@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fire Alarm Cause & Effect — P24136</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #1d4ed8;
+      --primary-dim: rgba(59,130,246,0.15);
+      --warn: #f59e0b;
+      --warn-dim: rgba(245,158,11,0.15);
+      --green: #16a34a;
+      --green-dim: rgba(22,163,74,0.2);
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #293548;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #64748b;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+      border-bottom: 2px solid var(--primary);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      print-color-adjust: exact;
+    }
+
+    .fire-icon { font-size: 2.2rem; }
+
+    header h1 { font-size: 1.3rem; font-weight: 700; color: #fff; }
+    header .sub { font-size: 0.8rem; color: #93c5fd; margin-top: 0.15rem; }
+
+    .project-meta {
+      margin-left: auto;
+      text-align: right;
+      font-size: 0.78rem;
+      color: #93c5fd;
+      line-height: 1.7;
+    }
+
+    /* ── Tester info bar ── */
+    .info-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 2rem;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .info-bar label { font-size: 0.8rem; color: var(--muted); margin-right: 0.4rem; }
+
+    .info-bar select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.85rem;
+      width: 220px;
+    }
+
+    .info-bar select:focus { outline: 2px solid var(--primary); }
+
+    .info-bar input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.85rem;
+      width: 200px;
+    }
+
+    .info-bar input:focus { outline: 2px solid var(--primary); }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s;
+    }
+
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-btn:hover { color: var(--text); }
+
+    /* ── Cause selector ── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+
+    .cause-group { margin-bottom: 1.2rem; }
+
+    .cause-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .cause-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.55rem 0.9rem;
+      cursor: pointer;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.12s, border-color 0.12s;
+      text-align: left;
+    }
+
+    .cause-btn .badge {
+      background: var(--surface2);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.85rem;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .cause-btn:hover { background: var(--surface2); border-color: var(--primary); }
+
+    .cause-btn.selected {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+    }
+
+    .cause-btn.selected .badge {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* ── Checklist panel ── */
+    #checklist-panel { margin-top: 1.5rem; }
+
+    .selected-cause-header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+
+    .selected-cause-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .selected-cause-header h2 span {
+      color: var(--primary);
+      font-size: 1.2rem;
+      margin-right: 0.5rem;
+    }
+
+    .selected-cause-header .area-tag {
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+    }
+
+    /* Progress */
+    .progress-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .progress-bar {
+      width: 200px;
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .progress-text { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+
+    .btn-reset {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-reset:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* Category groups */
+    .cat-group { margin-bottom: 1.2rem; }
+
+    .cat-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .cat-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cat-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+    /* Effect rows */
+    .effect-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 0.4rem;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .effect-row.active { border-left: 3px solid currentColor; }
+    .effect-row.inactive { opacity: 0.35; }
+
+    .effect-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      padding: 0.7rem 1rem;
+    }
+
+    .effect-num {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      width: 22px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .effect-label {
+      flex: 1;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    /* Pass / Fail buttons */
+    .pf-bar {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem 0.6rem 3rem;
+    }
+
+    .pf-btn {
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 0.35rem 1.1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+
+    .pf-btn.pass:hover  { background: rgba(22,163,74,0.15); border-color: #16a34a; color: #4ade80; }
+    .pf-btn.fail:hover  { background: var(--warn-dim); border-color: var(--warn); color: #fcd34d; }
+
+    .pf-btn.sel-pass { background: rgba(22,163,74,0.25); border-color: #16a34a; color: #4ade80; }
+    .pf-btn.sel-fail { background: var(--warn-dim); border-color: var(--warn); color: #fcd34d; }
+
+    .effect-row.passed { border-left-color: #16a34a !important; }
+    .effect-row.failed { border-left-color: var(--warn) !important; }
+    .effect-row.passed .effect-label { color: var(--muted); }
+
+    /* Fail reason box */
+    .fail-reason {
+      display: none;
+      padding: 0 1rem 0.8rem 3rem;
+    }
+
+    .fail-reason label {
+      font-size: 0.75rem;
+      color: #fcd34d;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+
+    .fail-reason textarea {
+      width: 100%;
+      background: var(--warn-dim);
+      border: 1px solid var(--warn);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0.5rem 0.7rem;
+      font-size: 0.82rem;
+      resize: vertical;
+      min-height: 60px;
+      font-family: inherit;
+    }
+
+    .fail-reason textarea:focus { outline: 2px solid var(--warn); }
+
+    .fail-reason.warn-required textarea {
+      border-color: var(--primary);
+      outline: 2px solid var(--primary);
+      animation: shake 0.3s ease;
+    }
+
+    .fail-reason.warn-required label::after {
+      content: ' — required before proceeding';
+      color: var(--primary);
+      font-weight: 400;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%       { transform: translateX(-4px); }
+      75%       { transform: translateX(4px); }
+    }
+
+    /* Completion / warning banner */
+    #completion-banner {
+      display: none;
+      margin: 0.6rem 0 0.8rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      border: 1px solid transparent;
+    }
+
+    #completion-banner.success {
+      display: block;
+      background: rgba(22,163,74,0.15);
+      border-color: #16a34a;
+      color: #4ade80;
+    }
+
+    #completion-banner.warning {
+      display: block;
+      background: var(--warn-dim);
+      border-color: var(--warn);
+      color: #fcd34d;
+    }
+
+    .effect-status {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 20px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .status-active { background: rgba(5, 150, 105, 0.2); color: #34d399; }
+    .status-inactive { background: rgba(100, 116, 139, 0.2); color: var(--muted); }
+
+    .note-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      padding: 0 1rem 0.5rem 3.4rem;
+      display: block;
+    }
+
+    .note-toggle:hover { color: var(--text); }
+
+    .note-area {
+      padding: 0 1rem 0.7rem 3.4rem;
+      display: none;
+    }
+
+    .note-area.open { display: block; }
+
+    .note-area textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0.5rem 0.7rem;
+      font-size: 0.82rem;
+      resize: vertical;
+      min-height: 60px;
+      font-family: inherit;
+    }
+
+    .note-area textarea:focus { outline: 2px solid var(--primary); }
+
+    /* Placeholder */
+    #no-cause {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+
+    #no-cause .arrow { font-size: 2rem; margin-bottom: 0.5rem; }
+
+    /* ── Matrix view ── */
+    #matrix-view { overflow-x: auto; }
+
+    .matrix-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.75rem;
+    }
+
+    .matrix-table th, .matrix-table td {
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.5rem;
+      text-align: center;
+    }
+
+    .matrix-table th {
+      background: var(--surface);
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .matrix-table th.effect-col {
+      text-align: left;
+      max-width: 300px;
+      min-width: 220px;
+    }
+
+    .matrix-table th.cause-col { min-width: 70px; font-size: 0.65rem; }
+
+    .matrix-table td.cat-cell {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--surface);
+      white-space: nowrap;
+    }
+
+    .matrix-table td.effect-label-cell {
+      text-align: left;
+      font-size: 0.78rem;
+      padding: 0.4rem 0.8rem;
+    }
+
+    .matrix-table td.effect-num-cell {
+      font-weight: 700;
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+
+    .dot-active { color: #22c55e; font-size: 1rem; }
+    .dot-inactive { color: var(--border); font-size: 0.8rem; }
+
+    .matrix-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+    .cause-header-cell { font-size: 0.65rem; font-weight: 700; }
+
+    .col-highlight { background: rgba(220, 38, 38, 0.08) !important; }
+
+    /* ── Notes / footer ── */
+    .notes-section {
+      margin-top: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+
+    .notes-section h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+    }
+
+    .notes-list { list-style: none; }
+
+    .notes-list li {
+      font-size: 0.82rem;
+      padding: 0.3rem 0;
+      display: flex;
+      gap: 0.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .notes-list li:last-child { border-bottom: none; }
+
+    .notes-list .note-num {
+      font-weight: 700;
+      color: var(--primary);
+      flex-shrink: 0;
+      width: 24px;
+    }
+
+    /* ── Print ── */
+    .print-btn {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      border-radius: 6px;
+      padding: 0.4rem 1rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      margin-left: auto;
+      transition: background 0.15s;
+    }
+
+    .print-btn:hover { background: #b91c1c; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Compact cause bar (shown after selection) ── */
+    #cause-compact { display: none; margin-bottom: 1.2rem; }
+
+    .cause-compact-bar {
+      background: var(--primary-dim);
+      border: 1px solid var(--primary);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .cause-compact-bar .badge {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .cause-compact-bar .compact-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .btn-change {
+      background: none;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      border-radius: 6px;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-change:hover { background: var(--primary); color: #fff; }
+
+    .btn-submit {
+      background: #16a34a;
+      border: none;
+      color: #fff;
+      border-radius: 6px;
+      padding: 0.4rem 1.1rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-submit:hover { background: #15803d; }
+    .btn-submit:disabled { background: var(--muted); cursor: not-allowed; }
+
+    #submit-status {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      display: none;
+    }
+    #submit-status.success { background: rgba(22,163,74,0.2); color: #4ade80; display: block; }
+    #submit-status.error   { background: var(--warn-dim); color: #fcd34d; display: block; }
+    #submit-status.loading { background: rgba(100,116,139,0.2); color: var(--muted); display: block; }
+
+    @media print {
+      header, .info-bar, .tabs, .cause-group, .toolbar, .note-toggle, .btn-reset, .print-btn { display: none !important; }
+      body { background: #fff; color: #000; }
+      .effect-row { border: 1px solid #ccc; }
+      .effect-row.inactive { display: none; }
+      #matrix-view, #no-cause { display: none; }
+      #checklist-panel { display: block !important; }
+      main { padding: 0; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="fire-icon">🔥</div>
+  <div>
+    <h1>Fire Alarm Cause &amp; Effect Checklist</h1>
+    <div class="sub">Interactive Testing &amp; Commissioning Tool</div>
+  </div>
+  <div class="project-meta">
+    <div><strong>Project:</strong> P24136 — Mastercard Two South County</div>
+    <div><strong>Document:</strong> QF 95 — Fire Alarm Cause &amp; Effect Rev 2</div>
+    <div><strong>Date:</strong> 14/01/2026</div>
+  </div>
+</header>
+
+<div class="info-bar">
+  <div><label>Company:</label><select id="testerCompany">
+    <option value="">Select company...</option>
+    <option>Axis Engineering</option>
+    <option>Jones Electrical</option>
+    <option>Maurice Johnson &amp; Partners</option>
+    <option>T&amp;I Fitouts</option>
+  </select></div>
+  <div><label>Tester Name:</label><input type="text" id="testerName" placeholder="Enter name"></div>
+  <div><label>Date of Test:</label><input type="date" id="testDate"></div>
+<button class="print-btn" onclick="window.print()">&#128438; Print / Save PDF</button>
+</div>
+
+<main>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('checklist', this)">Checklist</button>
+    <button class="tab-btn" onclick="showTab('matrix', this)">Full Matrix</button>
+  </div>
+
+  <!-- ── CHECKLIST TAB ── -->
+  <div id="checklist-tab">
+
+    <!-- Cause selector -->
+    <div class="cause-group">
+      <div class="section-label">External Carpark — Select Trigger Cause</div>
+      <div class="cause-grid" id="causeGrid-ext"></div>
+    </div>
+
+    <div class="cause-group">
+      <div class="section-label">Landlord / Tenant Areas — Select Trigger Cause</div>
+      <div class="cause-grid" id="causeGrid-lta"></div>
+    </div>
+
+    <!-- Compact bar shown after a cause is selected -->
+    <div id="cause-compact">
+      <div class="cause-compact-bar">
+        <div class="badge" id="compact-badge"></div>
+        <div class="compact-label" id="compact-label"></div>
+        <div class="area-tag" id="compact-area"></div>
+        <button class="btn-change" onclick="changeCause()">&#8595; Change Cause</button>
+      </div>
+    </div>
+
+    <!-- Checklist output -->
+    <div id="checklist-panel">
+      <div id="no-cause">
+        <div class="arrow">&#8679;</div>
+        <div>Select a trigger cause above to load the required actions checklist.</div>
+      </div>
+      <div id="checklist-content" style="display:none">
+        <div class="selected-cause-header">
+          <div>
+            <h2><span id="sel-id"></span><span id="sel-label"></span></h2>
+            <div class="area-tag" id="sel-area"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+            <div class="progress-bar-wrap">
+              <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+              <div class="progress-text" id="progress-text">0 / 0 verified</div>
+            </div>
+            <button class="btn-reset" onclick="resetChecks()">Reset</button>
+            <button class="btn-submit" onclick="submitToSmartsheet()">&#8599; Submit to Smartsheet</button>
+          </div>
+        </div>
+        <div id="submit-status"></div>
+        <div id="completion-banner"></div>
+        <div class="toolbar">
+          <span style="font-size:0.8rem;color:var(--muted);">Active effects shown with checkboxes. Click &#8964; to add notes.</span>
+        </div>
+        <div id="effects-list"></div>
+      </div>
+    </div>
+
+  </div><!-- end checklist-tab -->
+
+  <!-- ── MATRIX TAB ── -->
+  <div id="matrix-tab" style="display:none">
+    <div id="matrix-view"></div>
+  </div>
+
+  <!-- Notes -->
+  <div class="notes-section">
+    <h3>Document Notes</h3>
+    <ul class="notes-list">
+      <li><span class="note-num">1</span><span>&#9675; = Effect INACTIVE for this cause</span></li>
+      <li><span class="note-num">2</span><span>&#9679; = Effect ACTIVE for this cause</span></li>
+      <li><span class="note-num">3</span><span>Full evacuation to be available via press button at front of main FAP or FARP.</span></li>
+      <li><span class="note-num">4</span><span>Any alert not cleared within the time limit will result in an evacuate signal.</span></li>
+      <li><span class="note-num">5</span><span>**Alarm investigation time TBA with design team.</span></li>
+      <li><span class="note-num">6</span><span>***On activation of local device only.</span></li>
+      <li><span class="note-num">7</span><span>Crossflow shaft to open on subject floor / lobby only.</span></li>
+      <li><span class="note-num">8</span><span>Mechanical ventilation to shut down on activation of FDAS.</span></li>
+      <li><span class="note-num">9</span><span>Passenger Lifts Descend to 1st Floor on receipt of fire signal from ground lobby.</span></li>
+      <li><span class="note-num">10</span><span>Double Knock shall mean: 2 No. Devices.</span></li>
+      <li><span class="note-num">11</span><span style="color:#93c5fd;font-weight:600;">Fire Alarm Network Controls: All Panels to Silence/Reset.</span></li>
+    </ul>
+  </div>
+
+</main>
+
+<script>
+  // ── Data ────────────────────────────────────────────────
+  const CAUSES = [
+    { id: 'A', label: 'Single Smoke Detector', area: 'External Carpark' },
+    { id: 'B', label: 'Single Heat Detector', area: 'External Carpark' },
+    { id: 'C', label: 'Two Detectors', area: 'External Carpark' },
+    { id: 'D', label: 'Break Glass Unit', area: 'External Carpark' },
+    { id: 'E', label: 'Single Heat Detector — All Areas', area: 'Landlord / Tenant Areas' },
+    { id: 'F', label: 'Single Smoke Detector — All Areas', area: 'Landlord / Tenant Areas' },
+    { id: 'G', label: 'Two Detectors or BGU+1 Detector — All Areas', area: 'Landlord / Tenant Areas' },
+    { id: 'H', label: 'Break Glass Unit — All Areas', area: 'Landlord / Tenant Areas' },
+    { id: 'I', label: 'Multiple Detectors / Break Glass Units — All Areas', area: 'Landlord / Tenant Areas' },
+    { id: 'J', label: 'BGU in Stairs 1, 2, & 3', area: 'Landlord / Tenant Areas' },
+    { id: 'K', label: 'BGU in Atrium Ground Floor', area: 'Landlord / Tenant Areas' },
+    { id: 'L', label: 'Single Detector or AOV Control Switch — Atrium Ground Floor', area: 'Landlord / Tenant Areas' },
+    { id: 'M', label: 'Single Detector or AOV Control Switch — Staircore 1, 2, or 3', area: 'Landlord / Tenant Areas' },
+    { id: 'N', label: 'VESDA System in Atrium', area: 'Landlord / Tenant Areas' },
+    { id: 'O', label: 'VESDA System', area: 'Landlord / Tenant Areas' },
+  ];
+
+  const EFFECTS = [
+    { id: 0,  num: 1,  label: 'Displayed on main panel.',                                                                                              category: 'Alerts' },
+    { id: 1,  num: 2,  label: 'System on 3 minute Alert at Panel and notify resident building manager. System goes into full alarm after 3 minute timeout.', category: 'Alerts' },
+    { id: 2,  num: 3,  label: 'Open AOVs / auto windows in affected staircore immediately.',                                                            category: 'AOV' },
+    { id: 3,  num: 4,  label: 'Open AOV in Atrium at High & Low Level.',                                                                               category: 'AOV' },
+    { id: 4,  num: 5,  label: 'Send signal to FSD interface.',                                                                                         category: 'General' },
+    { id: 5,  num: 6,  label: 'Lifts to return to ground floor level and landing doors to open and remain open. (Exception: If activation is in the ground floor lift lobby, lift returns to first floor level, doors open and remain open.)', category: 'Lifts' },
+    { id: 6,  num: 7,  label: 'External Sounder / Strobe activated.',                                                                                  category: 'Alerts' },
+    { id: 7,  num: 8,  label: 'Sounders — full evacuation all floors including roof plant areas.',                                                      category: 'Alerts' },
+    { id: 8,  num: 9,  label: 'Auto Dial Remote Monitoring Station on full evacuation.',                                                                category: 'Alerts' },
+    { id: 9,  num: 10, label: 'Send signal to MCC Panels to shut down.',                                                                               category: 'Mech Plant' },
+    { id: 10, num: 11, label: 'New Roof MCC Power Panel to shutdown.',                                                                                  category: 'Mech Plant' },
+    { id: 11, num: 12, label: 'HVAC system to shut down.',                                                                                              category: 'Mech Plant' },
+    { id: 12, num: 13, label: 'BMS Outstations to receive signal to shutdown.',                                                                         category: 'Mech Plant' },
+    { id: 13, num: 14, label: 'All doors held open on emergency catches to release and close.',                                                         category: 'Access Control' },
+    { id: 14, num: 15, label: 'Access control system doors fail safe — locking mechanism dis-engages.',                                                 category: 'Access Control' },
+    { id: 15, num: 16, label: 'Open security pass gates at reception.',                                                                                 category: 'Access Control' },
+    { id: 16, num: 17, label: 'Barriers to car park entrance to power open and remain open.',                                                           category: 'External Carpark' },
+  ];
+
+  // Active effects per cause (effect IDs)
+  const ACTIVE = {
+    A: new Set([0, 1]),
+    B: new Set([0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    C: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    D: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    E: new Set([0, 1]),
+    F: new Set([0, 1]),
+    G: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    H: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    I: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    J: new Set([0, 2, 4, 5]),
+    K: new Set([0, 3]),
+    L: new Set([0, 3]),
+    M: new Set([0, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    N: new Set([0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    O: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+  };
+
+  const CAT_COLORS = {
+    'Alerts':         '#f97316',
+    'AOV':            '#06b6d4',
+    'General':        '#eab308',
+    'Lifts':          '#3b82f6',
+    'Mech Plant':     '#a855f7',
+    'Access Control': '#10b981',
+    'External Carpark': '#22c55e',
+  };
+
+  const CAT_ORDER = ['Alerts', 'AOV', 'General', 'Lifts', 'Mech Plant', 'Access Control', 'External Carpark'];
+
+  // ── State ────────────────────────────────────────────────
+  let selectedCause = null;
+  let results = {};      // effectId -> 'pass' | 'fail' | null
+  let failReasons = {};  // effectId -> string
+
+  // Set today's date
+  document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
+
+  // ── Build cause buttons ──────────────────────────────────
+  function buildCauseButtons() {
+    const extGrid = document.getElementById('causeGrid-ext');
+    const ltaGrid = document.getElementById('causeGrid-lta');
+
+    CAUSES.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'cause-btn';
+      btn.id = 'cause-' + c.id;
+      btn.innerHTML = `<span class="badge">${c.id}</span>${c.label}`;
+      btn.onclick = () => selectCause(c.id);
+      (c.area === 'External Carpark' ? extGrid : ltaGrid).appendChild(btn);
+    });
+  }
+
+  // ── Select cause ─────────────────────────────────────────
+  function selectCause(id) {
+    if (selectedCause === id) return;
+
+    document.querySelectorAll('.cause-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('cause-' + id).classList.add('selected');
+
+    selectedCause = id;
+    results = {};
+    failReasons = {};
+
+    const cause = CAUSES.find(c => c.id === id);
+
+    // Update compact bar
+    document.getElementById('compact-badge').textContent = id;
+    document.getElementById('compact-label').textContent = cause.label;
+    document.getElementById('compact-area').textContent = cause.area;
+
+    // Collapse cause grids, show compact bar
+    document.querySelectorAll('.cause-group').forEach(g => g.style.display = 'none');
+    document.getElementById('cause-compact').style.display = 'block';
+
+    // Update checklist header
+    document.getElementById('sel-id').textContent = id + ' — ';
+    document.getElementById('sel-label').textContent = cause.label;
+    document.getElementById('sel-area').textContent = cause.area;
+
+    document.getElementById('no-cause').style.display = 'none';
+    document.getElementById('checklist-content').style.display = 'block';
+
+    // Clear previous submit status and banner
+    setStatus('', '');
+    showCompletionBanner('', '');
+    clearTimeout(advanceTimer);
+
+    renderEffects();
+    updateProgress();
+
+    // Scroll checklist into view
+    setTimeout(() => {
+      document.getElementById('checklist-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
+
+  // ── Change cause (expand grid again) ─────────────────────
+  function changeCause() {
+    document.querySelectorAll('.cause-group').forEach(g => g.style.display = 'block');
+    document.getElementById('cause-compact').style.display = 'none';
+    setTimeout(() => {
+      document.getElementById('causeGrid-ext').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
+
+  // ── Render effects ───────────────────────────────────────
+  function renderEffects() {
+    const activeSet = ACTIVE[selectedCause];
+    const list = document.getElementById('effects-list');
+    list.innerHTML = '';
+
+    const activeEffects = EFFECTS.filter(e => activeSet.has(e.id));
+    const inactiveEffects = EFFECTS.filter(e => !activeSet.has(e.id));
+
+    // Group active by category
+    CAT_ORDER.forEach(cat => {
+      const catEffects = activeEffects.filter(e => e.category === cat);
+      if (catEffects.length === 0) return;
+
+      const group = document.createElement('div');
+      group.className = 'cat-group';
+
+      const header = document.createElement('div');
+      header.className = 'cat-header';
+      header.innerHTML = `
+        <div class="cat-dot" style="background:${CAT_COLORS[cat]}"></div>
+        <div class="cat-title">${cat}</div>
+      `;
+      group.appendChild(header);
+
+      catEffects.forEach(e => {
+        group.appendChild(makeEffectRow(e, true));
+      });
+
+      list.appendChild(group);
+    });
+
+    // Inactive section (collapsed)
+    if (inactiveEffects.length > 0) {
+      const inactiveGroup = document.createElement('div');
+      inactiveGroup.className = 'cat-group';
+      inactiveGroup.style.marginTop = '1rem';
+
+      const inactiveHeader = document.createElement('div');
+      inactiveHeader.className = 'cat-header';
+      inactiveHeader.style.cursor = 'pointer';
+      inactiveHeader.innerHTML = `
+        <div class="cat-dot" style="background:var(--muted)"></div>
+        <div class="cat-title" style="color:var(--muted)">Inactive Effects (${inactiveEffects.length}) — click to toggle</div>
+      `;
+
+      const inactiveList = document.createElement('div');
+      inactiveList.style.display = 'none';
+      inactiveHeader.onclick = () => {
+        inactiveList.style.display = inactiveList.style.display === 'none' ? 'block' : 'none';
+      };
+
+      inactiveEffects.forEach(e => {
+        inactiveList.appendChild(makeEffectRow(e, false));
+      });
+
+      inactiveGroup.appendChild(inactiveHeader);
+      inactiveGroup.appendChild(inactiveList);
+      list.appendChild(inactiveGroup);
+    }
+  }
+
+  function makeEffectRow(effect, isActive) {
+    const row = document.createElement('div');
+    const cat = effect.category;
+    const color = CAT_COLORS[cat] || '#888';
+    row.className = 'effect-row ' + (isActive ? 'active' : 'inactive');
+    if (isActive) row.style.color = color;
+    row.id = 'row-' + effect.id;
+
+    // Apply saved result state
+    const savedResult = results[effect.id];
+    if (savedResult === 'pass') row.classList.add('passed');
+    if (savedResult === 'fail') row.classList.add('failed');
+
+    // Main row: number + label + status badge
+    const mainDiv = document.createElement('div');
+    mainDiv.className = 'effect-main';
+
+    const numEl = document.createElement('div');
+    numEl.className = 'effect-num';
+    numEl.textContent = effect.num;
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'effect-label';
+    labelEl.textContent = effect.label;
+
+    const statusEl = document.createElement('span');
+    statusEl.className = 'effect-status ' + (isActive ? 'status-active' : 'status-inactive');
+    statusEl.textContent = isActive ? 'ACTIVE' : 'INACTIVE';
+
+    if (!isActive) {
+      const inactiveCircle = document.createElement('span');
+      inactiveCircle.style.cssText = 'width:20px;color:var(--muted);font-size:0.9rem;flex-shrink:0;';
+      inactiveCircle.textContent = '○';
+      mainDiv.appendChild(numEl);
+      mainDiv.appendChild(inactiveCircle);
+      mainDiv.appendChild(labelEl);
+      mainDiv.appendChild(statusEl);
+      row.appendChild(mainDiv);
+      return row;
+    }
+
+    mainDiv.appendChild(numEl);
+    mainDiv.appendChild(labelEl);
+    mainDiv.appendChild(statusEl);
+    row.appendChild(mainDiv);
+
+    // Pass / Fail buttons
+    const pfBar = document.createElement('div');
+    pfBar.className = 'pf-bar';
+
+    const passBtn = document.createElement('button');
+    passBtn.className = 'pf-btn pass' + (savedResult === 'pass' ? ' sel-pass' : '');
+    passBtn.textContent = '✓ Pass';
+    passBtn.onclick = () => setResult(effect.id, 'pass');
+
+    const failBtn = document.createElement('button');
+    failBtn.className = 'pf-btn fail' + (savedResult === 'fail' ? ' sel-fail' : '');
+    failBtn.textContent = '✗ Fail';
+    failBtn.onclick = () => setResult(effect.id, 'fail');
+
+    pfBar.appendChild(passBtn);
+    pfBar.appendChild(failBtn);
+    row.appendChild(pfBar);
+
+    // Fail reason box
+    const failDiv = document.createElement('div');
+    failDiv.className = 'fail-reason';
+    failDiv.id = 'fail-reason-' + effect.id;
+    failDiv.style.display = savedResult === 'fail' ? 'block' : 'none';
+
+    const failLabel = document.createElement('label');
+    failLabel.textContent = 'Reason for failure:';
+
+    const failTextarea = document.createElement('textarea');
+    failTextarea.placeholder = 'Describe the reason for this failure...';
+    failTextarea.value = failReasons[effect.id] || '';
+    failTextarea.oninput = () => {
+      failReasons[effect.id] = failTextarea.value;
+      // Remove warning highlight once they start typing
+      failDiv.classList.remove('warn-required');
+      checkAllAnswered();
+    };
+
+    failDiv.appendChild(failLabel);
+    failDiv.appendChild(failTextarea);
+    row.appendChild(failDiv);
+
+    return row;
+  }
+
+  function setResult(id, result) {
+    results[id] = result;
+
+    const row = document.getElementById('row-' + id);
+    row.classList.toggle('passed', result === 'pass');
+    row.classList.toggle('failed', result === 'fail');
+
+    // Update button states
+    const pfBar = row.querySelector('.pf-bar');
+    pfBar.querySelector('.pf-btn.pass').className = 'pf-btn pass' + (result === 'pass' ? ' sel-pass' : '');
+    pfBar.querySelector('.pf-btn.fail').className = 'pf-btn fail' + (result === 'fail' ? ' sel-fail' : '');
+
+    // Show/hide fail reason box
+    const failDiv = document.getElementById('fail-reason-' + id);
+    failDiv.style.display = result === 'fail' ? 'block' : 'none';
+    if (result === 'fail') {
+      failDiv.querySelector('textarea').focus();
+    }
+
+    updateProgress();
+
+    // On pass, scroll to next unanswered effect
+    if (result === 'pass') {
+      const activeSet = ACTIVE[selectedCause];
+      const activeIds = EFFECTS.filter(e => activeSet.has(e.id)).map(e => e.id);
+      const currentIdx = activeIds.indexOf(id);
+      const nextUnanswered = activeIds.slice(currentIdx + 1).find(eid => !results[eid]);
+      if (nextUnanswered !== undefined) {
+        setTimeout(() => {
+          document.getElementById('row-' + nextUnanswered).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
+
+    checkAllAnswered();
+  }
+
+  function updateProgress() {
+    const activeSet = ACTIVE[selectedCause];
+    const total = activeSet.size;
+    const done = [...activeSet].filter(id => results[id] !== undefined && results[id] !== null).length;
+    const passed = [...activeSet].filter(id => results[id] === 'pass').length;
+    const failed = [...activeSet].filter(id => results[id] === 'fail').length;
+    const pct = total === 0 ? 0 : Math.round(done / total * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    const fill = document.getElementById('progress-fill');
+    if (failed > 0 && done === total) {
+      fill.style.background = '#ef4444';
+      document.getElementById('progress-text').textContent = `${passed} Pass / ${failed} Fail — Complete`;
+    } else if (failed > 0) {
+      fill.style.background = '#f59e0b';
+      document.getElementById('progress-text').textContent = `${passed} Pass / ${failed} Fail (${done}/${total})`;
+    } else {
+      fill.style.background = pct === 100 ? '#22c55e' : pct > 50 ? '#3b82f6' : '#64748b';
+      document.getElementById('progress-text').textContent = `${done} / ${total} completed`;
+    }
+  }
+
+  function resetChecks() {
+    results = {};
+    failReasons = {};
+    renderEffects();
+    updateProgress();
+  }
+
+  // ── Matrix view ──────────────────────────────────────────
+  function buildMatrix() {
+    const wrap = document.getElementById('matrix-view');
+    const table = document.createElement('table');
+    table.className = 'matrix-table';
+
+    // Header rows
+    const headRow1 = document.createElement('tr');
+
+    // Category col + num col + effect col
+    const th0 = document.createElement('th'); th0.textContent = ''; headRow1.appendChild(th0);
+    const th0b = document.createElement('th'); th0b.textContent = '#'; headRow1.appendChild(th0b);
+    const thEff = document.createElement('th'); thEff.className = 'effect-col'; thEff.textContent = 'Effect'; headRow1.appendChild(thEff);
+
+    // Group headers
+    const extTh = document.createElement('th');
+    extTh.colSpan = 4;
+    extTh.style.background = 'rgba(220,38,38,0.15)';
+    extTh.style.color = '#f87171';
+    extTh.textContent = 'External Carpark';
+    headRow1.appendChild(extTh);
+
+    const ltaTh = document.createElement('th');
+    ltaTh.colSpan = 11;
+    ltaTh.style.background = 'rgba(37,99,235,0.15)';
+    ltaTh.style.color = '#93c5fd';
+    ltaTh.textContent = 'Landlord / Tenant Areas';
+    headRow1.appendChild(ltaTh);
+
+    table.appendChild(headRow1);
+
+    // Cause letter headers
+    const headRow2 = document.createElement('tr');
+    ['', '#', 'Effect / Cause →'].forEach((t, i) => {
+      const th = document.createElement('th');
+      th.textContent = t;
+      if (i === 2) th.className = 'effect-col';
+      headRow2.appendChild(th);
+    });
+
+    CAUSES.forEach(c => {
+      const th = document.createElement('th');
+      th.className = 'cause-col';
+      th.title = c.label;
+      th.innerHTML = `<strong>${c.id}</strong>`;
+      headRow2.appendChild(th);
+    });
+
+    table.appendChild(headRow2);
+
+    // Effect rows (grouped by category)
+    const categories = CAT_ORDER.filter(cat => EFFECTS.some(e => e.category === cat));
+
+    categories.forEach(cat => {
+      const catEffects = EFFECTS.filter(e => e.category === cat);
+
+      catEffects.forEach((effect, i) => {
+        const tr = document.createElement('tr');
+
+        // Category cell (rowspan for first in group)
+        if (i === 0) {
+          const catTd = document.createElement('td');
+          catTd.className = 'cat-cell';
+          catTd.rowSpan = catEffects.length;
+          catTd.style.color = CAT_COLORS[cat];
+          catTd.textContent = cat;
+          tr.appendChild(catTd);
+        }
+
+        // Number cell
+        const numTd = document.createElement('td');
+        numTd.className = 'effect-num-cell';
+        numTd.textContent = effect.num;
+        tr.appendChild(numTd);
+
+        // Effect label cell
+        const labelTd = document.createElement('td');
+        labelTd.className = 'effect-label-cell';
+        labelTd.textContent = effect.label;
+        tr.appendChild(labelTd);
+
+        // Cause cells
+        CAUSES.forEach(c => {
+          const td = document.createElement('td');
+          const isActive = ACTIVE[c.id].has(effect.id);
+          td.innerHTML = isActive
+            ? '<span class="dot-active" title="ACTIVE">&#9679;</span>'
+            : '<span class="dot-inactive" title="INACTIVE">&#9675;</span>';
+          tr.appendChild(td);
+        });
+
+        table.appendChild(tr);
+      });
+    });
+
+    wrap.appendChild(table);
+  }
+
+  // ── Tabs ─────────────────────────────────────────────────
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('checklist-tab').style.display = name === 'checklist' ? 'block' : 'none';
+    document.getElementById('matrix-tab').style.display = name === 'matrix' ? 'block' : 'none';
+
+    if (name === 'matrix' && !document.querySelector('.matrix-table')) {
+      buildMatrix();
+    }
+  }
+
+  // ── Auto-advance logic ───────────────────────────────────
+  let advanceTimer = null;
+
+  function checkAllAnswered() {
+    if (!selectedCause) return;
+    const activeSet = ACTIVE[selectedCause];
+    const activeIds = [...activeSet];
+
+    // Not all answered yet — hide banner
+    const allAnswered = activeIds.every(id => results[id]);
+    if (!allAnswered) {
+      showCompletionBanner('', '');
+      return;
+    }
+
+    // Check for fails with missing reasons
+    const missingReasons = activeIds.filter(id =>
+      results[id] === 'fail' && !failReasons[id]?.trim()
+    );
+
+    if (missingReasons.length > 0) {
+      clearTimeout(advanceTimer);
+      const noun = missingReasons.length === 1 ? 'effect' : 'effects';
+      showCompletionBanner('warning',
+        `⚠ Please enter a reason for ${missingReasons.length} failed ${noun} before proceeding.`
+      );
+      // Highlight the empty fail boxes and scroll to first
+      missingReasons.forEach(id => {
+        document.getElementById('fail-reason-' + id).classList.add('warn-required');
+      });
+      setTimeout(() => {
+        document.getElementById('fail-reason-' + missingReasons[0])
+          .scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+      return;
+    }
+
+    // All complete and valid — advance to next cause
+    const causeIds = CAUSES.map(c => c.id);
+    const nextId = causeIds[causeIds.indexOf(selectedCause) + 1];
+
+    if (nextId) {
+      const nextCause = CAUSES.find(c => c.id === nextId);
+      showCompletionBanner('success',
+        `✓ Cause ${selectedCause} complete — advancing to Cause ${nextId}: ${nextCause.label}...`
+      );
+      clearTimeout(advanceTimer);
+      advanceTimer = setTimeout(() => {
+        selectCause(nextId);
+      }, 2000);
+    } else {
+      showCompletionBanner('success',
+        `✓ All causes completed! Use the Submit to Smartsheet button to log your results.`
+      );
+    }
+  }
+
+  function showCompletionBanner(type, msg) {
+    const el = document.getElementById('completion-banner');
+    el.className = type;
+    el.textContent = msg;
+  }
+
+  // ── Smartsheet Integration ───────────────────────────────
+  const SS_SHEET_ID = '888957469413252';
+  const SS_COLS = {
+    testRef:        7270084400942980,
+    testDate:       1640584866729860,
+    testerName:     6144184494100356,
+    witness:        3892384680415108,
+    causeId:        8395984307785604,
+    causeDesc:      1077634913308548,
+    area:           5581234540679044,
+    effectsRequired:3329434726993796,
+    effectsVerified:7833034354364292,
+    result:         2203534820151172,
+    effectDetail:   6707134447521668,
+    notes:          4455334633836420,
+  };
+
+  async function submitToSmartsheet() {
+    const apiKey = '6w2Hf1f78c7DrDUjfFrZCtPtvKjYcxXHhTtzb';
+    if (!selectedCause) {
+      setStatus('error', 'Please select a trigger cause first.');
+      return;
+    }
+
+    const cause = CAUSES.find(c => c.id === selectedCause);
+    const activeSet = ACTIVE[selectedCause];
+    const total = activeSet.size;
+    const passed = [...activeSet].filter(id => results[id] === 'pass').length;
+    const failed = [...activeSet].filter(id => results[id] === 'fail').length;
+    const done = passed + failed;
+    const overallResult = done < total ? 'Incomplete' : failed > 0 ? 'Fail' : 'Pass';
+
+    // Build effect detail string
+    const effectDetail = [...activeSet].map(id => {
+      const e = EFFECTS.find(ef => ef.id === id);
+      const r = results[id];
+      const prefix = r === 'pass' ? '[PASS]' : r === 'fail' ? '[FAIL]' : '[----]';
+      const reason = r === 'fail' && failReasons[id] ? ` — ${failReasons[id]}` : '';
+      return `${prefix} ${e.num}. ${e.label}${reason}`;
+    }).join('\n');
+
+    // Combine fail reasons as notes
+    const allNotes = [...activeSet]
+      .filter(id => results[id] === 'fail' && failReasons[id] && failReasons[id].trim())
+      .map(id => {
+        const e = EFFECTS.find(ef => ef.id === id);
+        return `Effect ${e.num}: ${failReasons[id].trim()}`;
+      }).join(' | ');
+
+    // Test reference: e.g. TEST-C-2026-05-04
+    const dateStr = document.getElementById('testDate').value || new Date().toISOString().split('T')[0];
+    const testRef = `TEST-${selectedCause}-${dateStr}`;
+
+    const cells = [
+      { columnId: SS_COLS.testRef,         value: testRef },
+      { columnId: SS_COLS.testDate,        value: dateStr },
+      { columnId: SS_COLS.testerName,      value: document.getElementById('testerName').value || '' },
+      { columnId: SS_COLS.witness,         value: document.getElementById('testerCompany').value || '' },
+      { columnId: SS_COLS.causeId,         value: selectedCause },
+      { columnId: SS_COLS.causeDesc,       value: cause.label },
+      { columnId: SS_COLS.area,            value: cause.area },
+      { columnId: SS_COLS.effectsRequired, value: total },
+      { columnId: SS_COLS.effectsVerified, value: passed },
+      { columnId: SS_COLS.result,          value: overallResult },
+      { columnId: SS_COLS.effectDetail,    value: effectDetail },
+      { columnId: SS_COLS.notes,           value: allNotes },
+    ];
+
+    setStatus('loading', 'Submitting to Smartsheet...');
+    document.querySelector('.btn-submit').disabled = true;
+
+    try {
+      const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([{ cells }]),
+      });
+
+      const data = await resp.json();
+
+      if (resp.ok && data.resultCode === 0) {
+        setStatus('success', `Submitted — ${testRef} logged to Smartsheet. ${passed} Pass, ${failed} Fail, ${total - done} outstanding. Result: ${overallResult}.`);
+      } else {
+        const msg = data.message || 'Unknown error';
+        setStatus('error', `Smartsheet error: ${msg}. Check your API key is correct.`);
+      }
+    } catch (err) {
+      setStatus('error', `Network error: ${err.message}. Check your internet connection.`);
+    } finally {
+      document.querySelector('.btn-submit').disabled = false;
+    }
+  }
+
+  function setStatus(type, msg) {
+    const el = document.getElementById('submit-status');
+    el.className = type;
+    el.textContent = msg;
+  }
+
+  // ── Init ─────────────────────────────────────────────────
+  buildCauseButtons();
+</script>
+</body>
+</html>
