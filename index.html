@@ -1156,9 +1156,16 @@
         background: #fff;
       }
       @page { margin: 12mm; size: A4 portrait; }
+      @page matrix-landscape { size: A4 landscape; margin: 8mm; }
 
       .pr-page { page-break-after: always; break-after: page; padding-bottom: 6mm; }
       .pr-page:last-child { page-break-after: avoid; break-after: avoid; }
+      .matrix-page { page: matrix-landscape; overflow: visible; }
+      .matrix-page .matrix-table { font-size: 7pt; }
+      .matrix-page .matrix-table th, .matrix-page .matrix-table td { padding: 2px 3px; }
+      .matrix-page .matrix-table th.cause-col { font-size: 6pt; min-width: 18px; }
+      .matrix-page .matrix-table td.effect-label-cell { font-size: 7pt; max-width: 200px; }
+      .matrix-page .matrix-table td.cat-cell { font-size: 6pt; }
 
       .pr-page-header {
         display: flex; justify-content: space-between; align-items: flex-end;
@@ -2367,45 +2374,77 @@
   // ── Original document pages (PDF embedded as base64) ────
   // ── Matrix page capture ──────────────────────────────────
   async function captureMatrixPage() {
-    // Build matrix if not already done
-    if (!document.querySelector('.matrix-table')) buildMatrix();
+    // Build matrix HTML with pure inline styles — no writing-mode (html2canvas can't handle it)
+    const categories = CAT_ORDER.filter(cat => EFFECTS.some(e => e.category === cat));
 
-    const matrixHTML = document.getElementById('matrix-view').innerHTML;
+    const causeHeaderCells = CAUSES.map(c =>
+      `<th style="font-size:8px;font-weight:700;border:1px solid #e2e8f0;padding:3px 2px;` +
+      `background:#1a1a1a;color:#fff;text-align:center;min-width:22px;width:22px;">${c.id}</th>`
+    ).join('');
 
-    // Render in an iframe with embedded CSS (same proven approach as report pages)
-    const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; padding: 12px; width: max-content; }
-      .matrix-table { border-collapse: collapse; font-size: 10px; }
-      .matrix-table th, .matrix-table td { border: 1px solid #e2e8f0; padding: 4px 5px; text-align: center; }
-      .matrix-table th { background: #f8fafc; color: #64748b; font-weight: 600; }
-      .matrix-table th.effect-col { text-align: left; min-width: 200px; max-width: 260px; }
-      .matrix-table th.cause-col { min-width: 26px; font-size: 9px; writing-mode: vertical-rl;
-        white-space: nowrap; padding: 5px 3px; vertical-align: bottom; font-weight: 600; }
-      .matrix-table td.cat-cell { writing-mode: vertical-rl; text-orientation: mixed;
-        transform: rotate(180deg); font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
-        text-transform: uppercase; color: #64748b; background: #f8fafc; white-space: nowrap; }
-      .matrix-table td.effect-label-cell { text-align: left; font-size: 10px; padding: 4px 8px; }
-      .matrix-table td.effect-num-cell { font-weight: 700; color: #94a3b8; font-size: 9px; }
-      .dot-active { color: #16a34a; font-size: 13px; }
-      .dot-inactive { color: #cbd5e1; font-size: 11px; }
-      .matrix-table tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
-      th[style*="rgba(242,101,34"] { background: rgba(242,101,34,0.12) !important; color: #c94f15; }
-      th[style*="rgba(22,163,74"] { background: rgba(22,163,74,0.1) !important; color: #15803d; }
-    </style></head><body><div id="matrix-view">${matrixHTML}</div></body></html>`;
+    let bodyRows = '';
+    categories.forEach(cat => {
+      const catEffects = EFFECTS.filter(e => e.category === cat);
+      const catColor = CAT_COLORS[cat] || '#888';
+      catEffects.forEach((effect, i) => {
+        const causeCells = CAUSES.map(c => {
+          const isActive = ACTIVE[c.id].has(effect.id);
+          const result = (allResults[c.id] || {})[effect.id];
+          let bg = 'transparent', dot = '&#9675;', color = '#d1d5db';
+          if (isActive) {
+            dot = '&#9679;'; color = '#16a34a'; bg = 'rgba(22,163,74,0.08)';
+            if (result === 'fail') { color = '#dc2626'; bg = 'rgba(220,38,38,0.1)'; }
+          }
+          return `<td style="text-align:center;background:${bg};border:1px solid #e2e8f0;` +
+            `padding:2px;width:22px;"><span style="color:${color};font-size:11px;">${dot}</span></td>`;
+        }).join('');
+
+        const catCell = i === 0
+          ? `<td rowspan="${catEffects.length}" style="font-size:7px;font-weight:700;text-transform:uppercase;` +
+            `color:${catColor};background:#f8fafc;border:1px solid #e2e8f0;padding:3px 4px;text-align:center;">${cat}</td>`
+          : '';
+
+        bodyRows += `<tr>${catCell}` +
+          `<td style="font-size:8px;font-weight:700;color:#94a3b8;border:1px solid #e2e8f0;padding:2px 4px;text-align:center;">${effect.num}</td>` +
+          `<td style="font-size:8px;border:1px solid #e2e8f0;padding:3px 5px;max-width:160px;">${effect.label}</td>` +
+          `${causeCells}</tr>`;
+      });
+    });
+
+    const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: Arial, sans-serif; background: #fff; padding: 8px; }</style>
+    </head><body>
+      <div style="font-size:11px;font-weight:800;margin-bottom:8px;color:#1a1a1a;border-bottom:2px solid #F26522;padding-bottom:4px;">
+        Cause &amp; Effect Matrix — P24136 Mastercard Two South County</div>
+      <table style="border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th colspan="3" style="border:1px solid #e2e8f0;background:#f8fafc;font-size:8px;padding:3px;"></th>
+            <th colspan="4" style="background:rgba(242,101,34,0.15);color:#c94f15;font-size:8px;font-weight:700;border:1px solid #e2e8f0;padding:3px;text-align:center;">External Carpark</th>
+            <th colspan="11" style="background:rgba(22,163,74,0.12);color:#15803d;font-size:8px;font-weight:700;border:1px solid #e2e8f0;padding:3px;text-align:center;">Landlord / Tenant Areas</th>
+          </tr>
+          <tr>
+            <th style="font-size:8px;border:1px solid #e2e8f0;padding:3px 4px;background:#1a1a1a;color:#fff;text-align:center;">Cat</th>
+            <th style="font-size:8px;border:1px solid #e2e8f0;padding:3px;background:#1a1a1a;color:#fff;text-align:center;">#</th>
+            <th style="font-size:8px;border:1px solid #e2e8f0;padding:3px 5px;background:#1a1a1a;color:#fff;text-align:left;min-width:140px;">Effect</th>
+            ${causeHeaderCells}
+          </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </body></html>`;
 
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;top:0;left:-4000px;border:none;width:1400px;height:800px;';
+    iframe.style.cssText = 'position:fixed;top:0;left:-5000px;border:none;width:1200px;height:900px;';
     document.body.appendChild(iframe);
     iframe.contentDocument.open();
     iframe.contentDocument.write(fullHtml);
     iframe.contentDocument.close();
 
-    // Wait for layout and fonts
     await new Promise(r => setTimeout(r, 500));
 
     const body = iframe.contentDocument.body;
-    const contentW = Math.max(body.scrollWidth, 600);
+    const contentW = Math.max(body.scrollWidth, 400);
     const contentH = Math.max(body.scrollHeight, 200);
 
     const canvas = await html2canvas(body, {
@@ -2421,7 +2460,6 @@
     document.body.removeChild(iframe);
 
     if (!canvas.width || !canvas.height) throw new Error('Matrix canvas empty');
-
     return { dataUrl: canvas.toDataURL('image/jpeg', 0.92), w: canvas.width, h: canvas.height };
   }
 
@@ -2544,7 +2582,6 @@
     pdf.setFont('helvetica', 'normal');
     pdf.text(`${totalP} effects passed  ·  ${totalF} effects failed  ·  ${completedCauses.size} of ${CAUSES.length} causes completed`, 80, 178);
 
-
     // ── Append full matrix as final page (landscape A4) ─────
     try {
       const mx = await captureMatrixPage();
@@ -2559,6 +2596,7 @@
       console.warn('Could not capture matrix:', e);
     }
 
+    return pdf.output('blob');
   }
 
   async function submitComplete() {
@@ -2705,7 +2743,7 @@
       ? (totalFail > 0 ? 'FAIL' : 'PASS')
       : 'INCOMPLETE';
 
-    const _cssUnused = `
+    const _cssRemoved = `
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; font-size: 9.5pt; background: #fff; }
       @page { margin: 12mm 12mm 12mm 12mm; size: A4 portrait; }
@@ -2939,20 +2977,14 @@
     const container = document.getElementById('print-report');
     container.innerHTML = buildPrintHTML();
 
-    // Append full matrix as final page
-    try {
-      const mx = await captureMatrixPage();
-      const div = document.createElement('div');
-      div.className = 'pr-page';
-      div.style.cssText = 'padding:8mm;display:flex;align-items:center;justify-content:center;background:#fff;';
-      const img = document.createElement('img');
-      img.src = mx.dataUrl;
-      img.style.cssText = 'max-width:100%;max-height:100%;height:auto;display:block;';
-      div.appendChild(img);
-      container.appendChild(div);
-    } catch (e) {
-      console.warn('Could not capture matrix for print:', e);
-    }
+    // Append matrix as final page — clone DOM directly so native CSS handles writing-mode
+    if (!document.querySelector('.matrix-table')) buildMatrix();
+    const matrixPage = document.createElement('div');
+    matrixPage.className = 'pr-page matrix-page';
+    const matrixClone = document.getElementById('matrix-view').cloneNode(true);
+    matrixPage.appendChild(matrixClone);
+    container.appendChild(matrixPage);
+
     document.body.classList.add('printing');
     window.print();
     document.body.classList.remove('printing');
