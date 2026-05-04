@@ -983,8 +983,16 @@
       cursor: pointer;
       box-shadow: 0 -4px 20px rgba(242,101,34,0.3);
       z-index: 100;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.2s, opacity 0.2s;
       letter-spacing: 0.02em;
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #float-submit.visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
     }
     #float-submit:hover { background: var(--primary-dark); }
 
@@ -1933,16 +1941,15 @@
     document.getElementById('checklist-tab').style.display = name === 'checklist' ? 'block' : 'none';
     document.getElementById('matrix-tab').style.display = name === 'matrix' ? 'block' : 'none';
 
-    // Hide floating elements on matrix tab
+    // Hide floating cause indicator on matrix tab
     const fc = document.getElementById('float-cause');
-    const fs = document.getElementById('float-submit');
     if (name === 'matrix') {
       fc.style.display = 'none';
-      fs.style.display = 'none';
     } else {
       if (fc.classList.contains('visible')) fc.style.display = '';
-      fs.style.display = '';
     }
+    // Submit button visibility is scroll-driven — hide on matrix tab
+    document.getElementById('float-submit').style.display = name === 'matrix' ? 'none' : '';
 
     if (name === 'matrix' && !document.querySelector('.matrix-table')) {
       buildMatrix();
@@ -2998,6 +3005,17 @@
   buildCauseButtons();
   updateOverallProgress();
   loadDraftIfExists();
+
+  // Show Submit button only when scrolled near the bottom
+  (function() {
+    const btn = document.getElementById('float-submit');
+    function updateSubmitVisibility() {
+      const nearBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 80;
+      btn.classList.toggle('visible', nearBottom);
+    }
+    window.addEventListener('scroll', updateSubmitVisibility, { passive: true });
+    updateSubmitVisibility();
+  })();
 
   // Clear field-error highlight as soon as user fills in a required field
   ['testerCompany', 'testerName', 'testDate'].forEach(id => {
