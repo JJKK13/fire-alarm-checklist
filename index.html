@@ -733,6 +733,118 @@
 
     .col-highlight { background: rgba(220, 38, 38, 0.08) !important; }
 
+    /* ── Setup tab ── */
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    @media (max-width: 700px) { .setup-grid { grid-template-columns: 1fr; } }
+
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+
+    .setup-card.full { grid-column: 1 / -1; }
+
+    .setup-card h3 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+    }
+
+    .setup-field { margin-bottom: 0.7rem; }
+
+    .setup-field label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .setup-field input, .setup-field textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0.4rem 0.7rem;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+
+    .setup-field input:focus, .setup-field textarea:focus { outline: 2px solid var(--primary); }
+
+    .setup-json {
+      width: 100%;
+      background: #1e293b;
+      border: 1px solid var(--border);
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-size: 0.78rem;
+      font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+      min-height: 320px;
+      resize: vertical;
+    }
+
+    .setup-json:focus { outline: 2px solid var(--primary); }
+
+    .setup-actions {
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+      margin-top: 0.8rem;
+    }
+
+    .btn-apply {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.4rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-apply:hover { background: var(--primary-dark); }
+
+    .btn-setup-sec {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .btn-setup-sec:hover { border-color: var(--primary); color: var(--primary); }
+
+    .setup-status {
+      font-size: 0.82rem;
+      margin-top: 0.6rem;
+      padding: 0.5rem 0.8rem;
+      border-radius: 6px;
+      display: none;
+    }
+    .setup-status.ok  { display:block; background: rgba(22,163,74,0.1); color: #15803d; border: 1px solid #16a34a; }
+    .setup-status.err { display:block; background: rgba(220,38,38,0.1); color: #991b1b; border: 1px solid #dc2626; }
+
+    .setup-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      line-height: 1.6;
+    }
+
     /* ── Notes / footer ── */
     .notes-section {
       margin-top: 2rem;
@@ -1111,19 +1223,15 @@
     <div class="sub">Interactive Testing &amp; Commissioning Tool</div>
   </div>
   <div class="project-meta">
-    <div><strong>Project:</strong> P24136 — Mastercard Two South County</div>
-    <div><strong>Document:</strong> QF 95 — Fire Alarm Cause &amp; Effect Rev 2</div>
-    <div><strong>Date:</strong> 14/01/2026</div>
+    <div id="meta-project"></div>
+    <div id="meta-document"></div>
+    <div id="meta-date"></div>
   </div>
 </header>
 
 <div class="info-bar">
   <div id="wrap-company"><label class="required-label">Company:</label><select id="testerCompany">
     <option value="">Select company...</option>
-    <option>Axis Engineering</option>
-    <option>Jones Electrical</option>
-    <option>Maurice Johnson &amp; Partners</option>
-    <option>T&amp;I Fitouts</option>
   </select></div>
   <div id="wrap-name"><label class="required-label">Tester Name:</label><input type="text" id="testerName" placeholder="Enter name"></div>
   <div id="wrap-date"><label class="required-label">Date of Test:</label><input type="date" id="testDate"></div>
@@ -1133,6 +1241,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="showTab('checklist', this)">Checklist</button>
     <button class="tab-btn" onclick="showTab('matrix', this)">Full Matrix</button>
+    <button class="tab-btn" onclick="showTab('setup', this)" style="margin-left:auto">&#9881; Setup</button>
   </div>
 
   <!-- ── CHECKLIST TAB ── -->
@@ -1150,16 +1259,8 @@
       <div class="overall-cause-dots" id="overall-dots"></div>
     </div>
 
-    <!-- Cause selector -->
-    <div class="cause-group">
-      <div class="section-label">External Carpark — Select Trigger Cause</div>
-      <div class="cause-grid" id="causeGrid-ext"></div>
-    </div>
-
-    <div class="cause-group">
-      <div class="section-label">Landlord / Tenant Areas — Select Trigger Cause</div>
-      <div class="cause-grid" id="causeGrid-lta"></div>
-    </div>
+    <!-- Cause selector (areas rendered dynamically) -->
+    <div id="cause-area-groups"></div>
 
     <!-- Legend -->
     <div class="cause-legend">
@@ -1227,96 +1328,281 @@
     <div id="matrix-view"></div>
   </div>
 
-  <!-- Notes -->
-  <div class="notes-section">
+  <!-- ── SETUP TAB ── -->
+  <div id="setup-tab" style="display:none">
+    <div class="setup-grid">
+
+      <div class="setup-card">
+        <h3>Project Details</h3>
+        <div class="setup-field"><label>Project Name / Client</label><input id="setup-name" type="text" placeholder="e.g. Mastercard Two South County"></div>
+        <div class="setup-field"><label>Project Reference</label><input id="setup-ref" type="text" placeholder="e.g. P24136"></div>
+        <div class="setup-field"><label>Document Reference</label><input id="setup-doc" type="text" placeholder="e.g. QF 95 — Fire Alarm C&E Rev 2"></div>
+        <div class="setup-field"><label>Document Date</label><input id="setup-date" type="text" placeholder="e.g. 14/01/2026"></div>
+      </div>
+
+      <div class="setup-card">
+        <h3>Companies</h3>
+        <div class="setup-field">
+          <label>One company per line</label>
+          <textarea id="setup-companies" rows="6" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.4rem 0.7rem;font-size:0.85rem;font-family:inherit;resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <div class="setup-card full">
+        <h3>Cause &amp; Effect Configuration — JSON</h3>
+        <p class="setup-hint">
+          Define your causes, effects, and which effects are active for each cause.<br>
+          Each <strong>effect id</strong> is a unique number (0, 1, 2…). The <strong>active</strong> object maps each cause id to an array of effect ids that apply.
+        </p>
+        <textarea class="setup-json" id="setup-json" spellcheck="false"></textarea>
+        <div class="setup-actions">
+          <button class="btn-apply" onclick="applySetup()">&#10003; Apply &amp; Rebuild</button>
+          <button class="btn-setup-sec" onclick="exportSetup()">&#8595; Export JSON</button>
+          <button class="btn-setup-sec" onclick="resetSetup()">&#8635; Reset to Default</button>
+        </div>
+        <div class="setup-status" id="setup-status"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notes (rendered dynamically from config) -->
+  <div class="notes-section" id="notes-section" style="display:none">
     <h3>Document Notes</h3>
-    <ul class="notes-list">
-      <li><span class="note-num">1</span><span>&#9675; = Effect INACTIVE for this cause</span></li>
-      <li><span class="note-num">2</span><span>&#9679; = Effect ACTIVE for this cause</span></li>
-      <li><span class="note-num">3</span><span>Full evacuation to be available via press button at front of main FAP or FARP.</span></li>
-      <li><span class="note-num">4</span><span>Any alert not cleared within the time limit will result in an evacuate signal.</span></li>
-      <li><span class="note-num">5</span><span>**Alarm investigation time TBA with design team.</span></li>
-      <li><span class="note-num">6</span><span>***On activation of local device only.</span></li>
-      <li><span class="note-num">7</span><span>Crossflow shaft to open on subject floor / lobby only.</span></li>
-      <li><span class="note-num">8</span><span>Mechanical ventilation to shut down on activation of FDAS.</span></li>
-      <li><span class="note-num">9</span><span>Passenger Lifts Descend to 1st Floor on receipt of fire signal from ground lobby.</span></li>
-      <li><span class="note-num">10</span><span>Double Knock shall mean: 2 No. Devices.</span></li>
-      <li><span class="note-num">11</span><span style="color:#93c5fd;font-weight:600;">Fire Alarm Network Controls: All Panels to Silence/Reset.</span></li>
-    </ul>
+    <ul class="notes-list" id="notes-list"></ul>
   </div>
 
 </main>
 
 <script>
-  // ── Data ────────────────────────────────────────────────
-  const CAUSES = [
-    { id: 'A', label: 'Single Smoke Detector', area: 'External Carpark' },
-    { id: 'B', label: 'Single Heat Detector', area: 'External Carpark' },
-    { id: 'C', label: 'Two Detectors', area: 'External Carpark' },
-    { id: 'D', label: 'Break Glass Unit', area: 'External Carpark' },
-    { id: 'E', label: 'Single Heat Detector — All Areas', area: 'Landlord / Tenant Areas' },
-    { id: 'F', label: 'Single Smoke Detector — All Areas', area: 'Landlord / Tenant Areas' },
-    { id: 'G', label: 'Two Detectors or BGU+1 Detector — All Areas', area: 'Landlord / Tenant Areas' },
-    { id: 'H', label: 'Break Glass Unit — All Areas', area: 'Landlord / Tenant Areas' },
-    { id: 'I', label: 'Multiple Detectors / Break Glass Units — All Areas', area: 'Landlord / Tenant Areas' },
-    { id: 'J', label: 'BGU in Stairs 1, 2, & 3', area: 'Landlord / Tenant Areas' },
-    { id: 'K', label: 'BGU in Atrium Ground Floor', area: 'Landlord / Tenant Areas' },
-    { id: 'L', label: 'Single Detector or AOV Control Switch — Atrium Ground Floor', area: 'Landlord / Tenant Areas' },
-    { id: 'M', label: 'Single Detector or AOV Control Switch — Staircore 1, 2, or 3', area: 'Landlord / Tenant Areas' },
-    { id: 'N', label: 'VESDA System in Atrium', area: 'Landlord / Tenant Areas' },
-    { id: 'O', label: 'VESDA System', area: 'Landlord / Tenant Areas' },
-  ];
+  // ── Default configuration ────────────────────────────────
+  const CONFIG_KEY = 'tandi_ce_config';
+  const CAT_PALETTE = ['#f97316','#06b6d4','#eab308','#3b82f6','#a855f7','#10b981','#22c55e','#ec4899','#f43f5e','#8b5cf6','#14b8a6','#f59e0b'];
 
-  const EFFECTS = [
-    { id: 0,  num: 1,  label: 'Displayed on main panel.',                                                                                              category: 'Alerts' },
-    { id: 1,  num: 2,  label: 'System on 3 minute Alert at Panel and notify resident building manager. System goes into full alarm after 3 minute timeout.', category: 'Alerts' },
-    { id: 2,  num: 3,  label: 'Open AOVs / auto windows in affected staircore immediately.',                                                            category: 'AOV' },
-    { id: 3,  num: 4,  label: 'Open AOV in Atrium at High & Low Level.',                                                                               category: 'AOV' },
-    { id: 4,  num: 5,  label: 'Send signal to FSD interface.',                                                                                         category: 'General' },
-    { id: 5,  num: 6,  label: 'Lifts to return to ground floor level and landing doors to open and remain open. (Exception: If activation is in the ground floor lift lobby, lift returns to first floor level, doors open and remain open.)', category: 'Lifts' },
-    { id: 6,  num: 7,  label: 'External Sounder / Strobe activated.',                                                                                  category: 'Alerts' },
-    { id: 7,  num: 8,  label: 'Sounders — full evacuation all floors including roof plant areas.',                                                      category: 'Alerts' },
-    { id: 8,  num: 9,  label: 'Auto Dial Remote Monitoring Station on full evacuation.',                                                                category: 'Alerts' },
-    { id: 9,  num: 10, label: 'Send signal to MCC Panels to shut down.',                                                                               category: 'Mech Plant' },
-    { id: 10, num: 11, label: 'New Roof MCC Power Panel to shutdown.',                                                                                  category: 'Mech Plant' },
-    { id: 11, num: 12, label: 'HVAC system to shut down.',                                                                                              category: 'Mech Plant' },
-    { id: 12, num: 13, label: 'BMS Outstations to receive signal to shutdown.',                                                                         category: 'Mech Plant' },
-    { id: 13, num: 14, label: 'All doors held open on emergency catches to release and close.',                                                         category: 'Access Control' },
-    { id: 14, num: 15, label: 'Access control system doors fail safe — locking mechanism dis-engages.',                                                 category: 'Access Control' },
-    { id: 15, num: 16, label: 'Open security pass gates at reception.',                                                                                 category: 'Access Control' },
-    { id: 16, num: 17, label: 'Barriers to car park entrance to power open and remain open.',                                                           category: 'External Carpark' },
-  ];
-
-  // Active effects per cause (effect IDs)
-  const ACTIVE = {
-    A: new Set([0, 1]),
-    B: new Set([0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    C: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    D: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    E: new Set([0, 1]),
-    F: new Set([0, 1]),
-    G: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    H: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    I: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    J: new Set([0, 2, 4, 5]),
-    K: new Set([0, 3]),
-    L: new Set([0, 3]),
-    M: new Set([0, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    N: new Set([0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    O: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+  const CONFIG_DEFAULT = {
+    project: {
+      name:     'Mastercard Two South County',
+      ref:      'P24136',
+      document: 'QF 95 — Fire Alarm Cause & Effect Rev 2',
+      date:     '14/01/2026'
+    },
+    companies: ['Axis Engineering','Jones Electrical','Maurice Johnson & Partners','T&I Fitouts'],
+    causes: [
+      { id:'A', label:'Single Smoke Detector',                                         area:'External Carpark' },
+      { id:'B', label:'Single Heat Detector',                                           area:'External Carpark' },
+      { id:'C', label:'Two Detectors',                                                  area:'External Carpark' },
+      { id:'D', label:'Break Glass Unit',                                               area:'External Carpark' },
+      { id:'E', label:'Single Heat Detector — All Areas',                              area:'Landlord / Tenant Areas' },
+      { id:'F', label:'Single Smoke Detector — All Areas',                             area:'Landlord / Tenant Areas' },
+      { id:'G', label:'Two Detectors or BGU+1 Detector — All Areas',                  area:'Landlord / Tenant Areas' },
+      { id:'H', label:'Break Glass Unit — All Areas',                                  area:'Landlord / Tenant Areas' },
+      { id:'I', label:'Multiple Detectors / Break Glass Units — All Areas',            area:'Landlord / Tenant Areas' },
+      { id:'J', label:'BGU in Stairs 1, 2, & 3',                                       area:'Landlord / Tenant Areas' },
+      { id:'K', label:'BGU in Atrium Ground Floor',                                    area:'Landlord / Tenant Areas' },
+      { id:'L', label:'Single Detector or AOV Control Switch — Atrium Ground Floor',  area:'Landlord / Tenant Areas' },
+      { id:'M', label:'Single Detector or AOV Control Switch — Staircore 1, 2, or 3',area:'Landlord / Tenant Areas' },
+      { id:'N', label:'VESDA System in Atrium',                                        area:'Landlord / Tenant Areas' },
+      { id:'O', label:'VESDA System',                                                   area:'Landlord / Tenant Areas' },
+    ],
+    effects: [
+      { id:0,  label:'Displayed on main panel.',                                                                                                                                                                   category:'Alerts' },
+      { id:1,  label:'System on 3 minute Alert at Panel and notify resident building manager. System goes into full alarm after 3 minute timeout.',                                                                 category:'Alerts' },
+      { id:2,  label:'Open AOVs / auto windows in affected staircore immediately.',                                                                                                                                category:'AOV' },
+      { id:3,  label:'Open AOV in Atrium at High & Low Level.',                                                                                                                                                    category:'AOV' },
+      { id:4,  label:'Send signal to FSD interface.',                                                                                                                                                              category:'General' },
+      { id:5,  label:'Lifts to return to ground floor level and landing doors to open and remain open. (Exception: If activation is in the ground floor lift lobby, lift returns to first floor level, doors open and remain open.)', category:'Lifts' },
+      { id:6,  label:'External Sounder / Strobe activated.',                                                                                                                                                       category:'Alerts' },
+      { id:7,  label:'Sounders — full evacuation all floors including roof plant areas.',                                                                                                                           category:'Alerts' },
+      { id:8,  label:'Auto Dial Remote Monitoring Station on full evacuation.',                                                                                                                                    category:'Alerts' },
+      { id:9,  label:'Send signal to MCC Panels to shut down.',                                                                                                                                                    category:'Mech Plant' },
+      { id:10, label:'New Roof MCC Power Panel to shutdown.',                                                                                                                                                       category:'Mech Plant' },
+      { id:11, label:'HVAC system to shut down.',                                                                                                                                                                   category:'Mech Plant' },
+      { id:12, label:'BMS Outstations to receive signal to shutdown.',                                                                                                                                             category:'Mech Plant' },
+      { id:13, label:'All doors held open on emergency catches to release and close.',                                                                                                                             category:'Access Control' },
+      { id:14, label:'Access control system doors fail safe — locking mechanism dis-engages.',                                                                                                                     category:'Access Control' },
+      { id:15, label:'Open security pass gates at reception.',                                                                                                                                                     category:'Access Control' },
+      { id:16, label:'Barriers to car park entrance to power open and remain open.',                                                                                                                               category:'External Carpark' },
+    ],
+    active: {
+      A:[0,1], B:[0,5,6,7,8,9,10,11,12,13,14,15,16], C:[0,4,5,6,7,8,9,10,11,12,13,14,15,16],
+      D:[0,4,5,6,7,8,9,10,11,12,13,14,15,16], E:[0,1], F:[0,1],
+      G:[0,4,5,6,7,8,9,10,11,12,13,14,15,16], H:[0,4,5,6,7,8,9,10,11,12,13,14,15,16],
+      I:[0,4,5,6,7,8,9,10,11,12,13,14,15,16], J:[0,2,4,5], K:[0,3], L:[0,3],
+      M:[0,2,4,5,6,7,8,9,10,11,12,13,14,15,16], N:[0,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+      O:[0,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    },
+    notes: [
+      'Full evacuation to be available via press button at front of main FAP or FARP.',
+      'Any alert not cleared within the time limit will result in an evacuate signal.',
+      'Alarm investigation time TBA with design team.',
+      'On activation of local device only.',
+      'Crossflow shaft to open on subject floor / lobby only.',
+      'Mechanical ventilation to shut down on activation of FDAS.',
+      'Passenger Lifts Descend to 1st Floor on receipt of fire signal from ground lobby.',
+      'Double Knock shall mean: 2 No. Devices.',
+      'Fire Alarm Network Controls: All Panels to Silence/Reset.'
+    ]
   };
 
-  const CAT_COLORS = {
-    'Alerts':         '#f97316',
-    'AOV':            '#06b6d4',
-    'General':        '#eab308',
-    'Lifts':          '#3b82f6',
-    'Mech Plant':     '#a855f7',
-    'Access Control': '#10b981',
-    'External Carpark': '#22c55e',
-  };
+  // ── Runtime data (rebuilt from config) ──────────────────
+  let CAUSES = [], EFFECTS = [], ACTIVE = {}, CAT_COLORS = {}, CAT_ORDER = [];
 
-  const CAT_ORDER = ['Alerts', 'AOV', 'General', 'Lifts', 'Mech Plant', 'Access Control', 'External Carpark'];
+  function buildRuntimeData(cfg) {
+    CAUSES = cfg.causes.map(c => ({ ...c }));
+    EFFECTS = cfg.effects.map((e, i) => ({ ...e, num: i + 1 }));
+    const cats = [...new Set(EFFECTS.map(e => e.category))];
+    CAT_ORDER = cats;
+    CAT_COLORS = {};
+    cats.forEach((c, i) => { CAT_COLORS[c] = CAT_PALETTE[i % CAT_PALETTE.length]; });
+    ACTIVE = {};
+    Object.entries(cfg.active).forEach(([cId, ids]) => { ACTIVE[cId] = new Set(ids); });
+  }
+
+  // ── Config load / apply ──────────────────────────────────
+  function loadConfig() {
+    try {
+      const saved = localStorage.getItem(CONFIG_KEY);
+      return saved ? JSON.parse(saved) : CONFIG_DEFAULT;
+    } catch { return CONFIG_DEFAULT; }
+  }
+
+  function applyConfig(cfg) {
+    buildRuntimeData(cfg);
+    // Update header meta
+    const p = cfg.project || {};
+    document.getElementById('meta-project').innerHTML  = p.ref  ? `<strong>${p.ref}</strong> — ${p.name || ''}` : p.name || '';
+    document.getElementById('meta-document').textContent = p.document || '';
+    document.getElementById('meta-date').textContent     = p.date     || '';
+    document.title = (p.name || 'Cause & Effect') + ' — Checklist';
+    // Update companies dropdown
+    const sel = document.getElementById('testerCompany');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Select company...</option>';
+    (cfg.companies || []).forEach(c => {
+      const o = document.createElement('option'); o.textContent = c; sel.appendChild(o);
+    });
+    if (prev) sel.value = prev;
+    // Update notes
+    const nl = document.getElementById('notes-list');
+    const ns = document.getElementById('notes-section');
+    nl.innerHTML = '';
+    if ((cfg.notes || []).length) {
+      ns.style.display = '';
+      cfg.notes.forEach((n, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="note-num">${i + 1}</span><span>${n}</span>`;
+        nl.appendChild(li);
+      });
+    } else {
+      ns.style.display = 'none';
+    }
+    // Rebuild UI
+    rebuildChecklist();
+  }
+
+  function rebuildChecklist() {
+    // Reset state
+    selectedCause = null; results = {}; failReasons = {};
+    completedCauses = new Set(); allResults = {}; allFailReasons = {};
+    _nextCauseId = null;
+    // Clear matrix so it rebuilds
+    document.getElementById('matrix-view').innerHTML = '';
+    document.querySelector('.matrix-table') && document.querySelector('.matrix-table').remove();
+    // Hide checklist content
+    document.getElementById('no-cause').style.display = '';
+    document.getElementById('checklist-content').style.display = 'none';
+    document.getElementById('cause-compact').style.display = 'none';
+    showCompletionBanner('', '');
+    hideNextCauseBtn();
+    // Rebuild cause buttons
+    buildCauseButtons();
+    updateOverallProgress(); updateCauseButtonStates();
+  }
+
+  // ── Setup tab functions ──────────────────────────────────
+  function configToJson(cfg) {
+    // Export clean config (without runtime data)
+    return JSON.stringify({
+      project:   cfg.project,
+      companies: cfg.companies,
+      causes:    cfg.causes,
+      effects:   cfg.effects.map(e => ({ id: e.id, label: e.label, category: e.category })),
+      active:    Object.fromEntries(Object.entries(cfg.active).map(([k, v]) => [k, Array.isArray(v) ? v : [...v]])),
+      notes:     cfg.notes || []
+    }, null, 2);
+  }
+
+  function populateSetupForm() {
+    const cfg = loadConfig();
+    const p = cfg.project || {};
+    document.getElementById('setup-name').value      = p.name     || '';
+    document.getElementById('setup-ref').value       = p.ref      || '';
+    document.getElementById('setup-doc').value       = p.document || '';
+    document.getElementById('setup-date').value      = p.date     || '';
+    document.getElementById('setup-companies').value = (cfg.companies || []).join('\n');
+    // JSON editor: only causes/effects/active/notes
+    const partial = {
+      causes:  cfg.causes,
+      effects: cfg.effects.map(e => ({ id: e.id, label: e.label, category: e.category })),
+      active:  Object.fromEntries(Object.entries(cfg.active).map(([k, v]) => [k, Array.isArray(v) ? v : [...v]])),
+      notes:   cfg.notes || []
+    };
+    document.getElementById('setup-json').value = JSON.stringify(partial, null, 2);
+    document.getElementById('setup-status').className = 'setup-status';
+  }
+
+  function applySetup() {
+    const st = document.getElementById('setup-status');
+    try {
+      const partial = JSON.parse(document.getElementById('setup-json').value);
+      if (!Array.isArray(partial.causes) || !Array.isArray(partial.effects) || !partial.active)
+        throw new Error('Config must include "causes", "effects", and "active".');
+      const cfg = {
+        project: {
+          name:     document.getElementById('setup-name').value.trim(),
+          ref:      document.getElementById('setup-ref').value.trim(),
+          document: document.getElementById('setup-doc').value.trim(),
+          date:     document.getElementById('setup-date').value.trim()
+        },
+        companies: document.getElementById('setup-companies').value.split('\n').map(s => s.trim()).filter(Boolean),
+        causes:    partial.causes,
+        effects:   partial.effects,
+        active:    partial.active,
+        notes:     partial.notes || []
+      };
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+      applyConfig(cfg);
+      // Switch to checklist tab
+      document.querySelector('.tab-btn.active').classList.remove('active');
+      const checklistBtn = document.querySelector('.tab-btn');
+      checklistBtn.classList.add('active');
+      document.getElementById('setup-tab').style.display = 'none';
+      document.getElementById('checklist-tab').style.display = 'block';
+      st.className = 'setup-status ok';
+      st.textContent = '✓ Configuration applied — checklist rebuilt.';
+    } catch (e) {
+      st.className = 'setup-status err';
+      st.textContent = '✗ ' + e.message;
+    }
+  }
+
+  function exportSetup() {
+    const cfg = loadConfig();
+    const blob = new Blob([configToJson(cfg)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (cfg.project?.ref || 'cause-effect') + '-config.json';
+    a.click();
+  }
+
+  function resetSetup() {
+    if (!confirm('Reset to the default P24136 configuration? This will clear any custom setup.')) return;
+    localStorage.removeItem(CONFIG_KEY);
+    populateSetupForm();
+    applyConfig(CONFIG_DEFAULT);
+    document.getElementById('setup-status').className = 'setup-status ok';
+    document.getElementById('setup-status').textContent = '✓ Reset to default configuration.';
+  }
 
   // ── State ────────────────────────────────────────────────
   let selectedCause = null;
@@ -1329,16 +1615,32 @@
 
   // ── Build cause buttons ──────────────────────────────────
   function buildCauseButtons() {
-    const extGrid = document.getElementById('causeGrid-ext');
-    const ltaGrid = document.getElementById('causeGrid-lta');
-
+    const container = document.getElementById('cause-area-groups');
+    container.innerHTML = '';
+    // Group causes by area (preserving order of first appearance)
+    const areas = [...new Set(CAUSES.map(c => c.area))];
+    const grids = {};
+    areas.forEach(area => {
+      const group = document.createElement('div');
+      group.className = 'cause-group';
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.textContent = area + ' — Select Trigger Cause';
+      const grid = document.createElement('div');
+      grid.className = 'cause-grid';
+      grid.id = 'causeGrid-' + area.replace(/\W+/g, '-');
+      group.appendChild(label);
+      group.appendChild(grid);
+      container.appendChild(group);
+      grids[area] = grid;
+    });
     CAUSES.forEach(c => {
       const btn = document.createElement('button');
       btn.className = 'cause-btn';
       btn.id = 'cause-' + c.id;
       btn.innerHTML = `<span class="badge">${c.id}</span>${c.label}`;
       btn.onclick = () => selectCause(c.id);
-      (c.area === 'External Carpark' ? extGrid : ltaGrid).appendChild(btn);
+      grids[c.area].appendChild(btn);
     });
   }
 
@@ -1404,7 +1706,7 @@
     document.getElementById('compact-area').textContent = cause.area;
 
     // Collapse cause grids, show compact bar
-    document.querySelectorAll('.cause-group').forEach(g => g.style.display = 'none');
+    document.getElementById('cause-area-groups').querySelectorAll('.cause-group').forEach(g => g.style.display = 'none');
     document.getElementById('cause-compact').style.display = 'block';
 
     // Update checklist header
@@ -1427,7 +1729,7 @@
 
   // ── Change cause (expand grid again) ─────────────────────
   function changeCause() {
-    document.querySelectorAll('.cause-group').forEach(g => g.style.display = 'block');
+    document.getElementById('cause-area-groups').querySelectorAll('.cause-group').forEach(g => g.style.display = 'block');
     document.getElementById('cause-compact').style.display = 'none';
   }
 
@@ -1739,10 +2041,14 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('checklist-tab').style.display = name === 'checklist' ? 'block' : 'none';
-    document.getElementById('matrix-tab').style.display = name === 'matrix' ? 'block' : 'none';
+    document.getElementById('matrix-tab').style.display   = name === 'matrix'    ? 'block' : 'none';
+    document.getElementById('setup-tab').style.display    = name === 'setup'     ? 'block' : 'none';
 
     if (name === 'matrix' && !document.querySelector('.matrix-table')) {
       buildMatrix();
+    }
+    if (name === 'setup') {
+      populateSetupForm();
     }
   }
 
@@ -2212,8 +2518,7 @@
   }
 
   // ── Init ─────────────────────────────────────────────────
-  buildCauseButtons();
-  updateOverallProgress();
+  applyConfig(loadConfig());
   loadDraftIfExists();
 
   // Clear field-error highlight as soon as user fills in a required field
