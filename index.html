@@ -2702,10 +2702,7 @@
     localStorage.removeItem(DRAFT_KEY);
     document.getElementById('draft-banner')?.remove();
 
-    const email = document.getElementById('emailTo').value.trim();
-    if (email) sendEmail(email, fileName.replace('.pdf',''), overallResult);
-
-    setModalStatus('success', `&#10003; Submitted — ${overallResult} result logged to Smartsheet with PDF attached. ${totalPassed} Pass, ${totalFailed} Fail across ${completedCauses.size} causes.${email ? ' Email sent.' : ''}`);
+    setModalStatus('success', `&#10003; Submitted — ${overallResult} result logged to Smartsheet with PDF attached. ${totalPassed} Pass, ${totalFailed} Fail across ${completedCauses.size} causes.`);
     document.getElementById('btn-submit-final').disabled = false;
   }
 
@@ -3061,10 +3058,6 @@
         <button class="btn-clear-sig" onclick="clearSignature()">Clear</button>
         <span class="sig-warn-msg" id="sigWarnMsg">&#9888; Please sign before submitting</span>
       </div>
-    </div>
-    <div class="modal-section">
-      <div class="modal-section-label">Email Results <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
-      <input type="email" id="emailTo" class="modal-input" placeholder="Enter email address">
     </div>
     <div id="modal-status"></div>
     <div class="modal-footer">
