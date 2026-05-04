@@ -2345,6 +2345,38 @@
     `;
   }
 
+  // ── Original document pages ──────────────────────────────
+  let _origDocCache = null;
+
+  async function loadOriginalDocPages() {
+    if (_origDocCache) return _origDocCache;
+
+    if (!window.pdfjsLib) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const pdfDoc = await pdfjsLib.getDocument('./qf95-cause-effect.pdf').promise;
+    const pages = [];
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      pages.push({ dataUrl: canvas.toDataURL('image/jpeg', 0.88), w: viewport.width, h: viewport.height });
+    }
+    _origDocCache = pages;
+    return pages;
+  }
+
   async function generatePDFBlob() {
     // Build full HTML document with embedded CSS (screen-mode rendering)
     const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
@@ -2463,6 +2495,18 @@
     pdf.setFontSize(9);
     pdf.setFont('helvetica', 'normal');
     pdf.text(`${totalP} effects passed  ·  ${totalF} effects failed  ·  ${completedCauses.size} of ${CAUSES.length} causes completed`, 80, 178);
+
+    // ── Append original cause & effect document ─────────────
+    try {
+      const origPages = await loadOriginalDocPages();
+      for (const pg of origPages) {
+        pdf.addPage();
+        const pgH = (pg.h / pg.w) * 210;
+        pdf.addImage(pg.dataUrl, 'JPEG', 0, 0, 210, pgH);
+      }
+    } catch (e) {
+      console.warn('Could not append original document:', e);
+    }
 
     return pdf.output('blob');
   }
@@ -2840,10 +2884,28 @@
     return html;
   }
 
-  function printReport() {
+  async function printReport() {
     archiveCurrentCause();
     const container = document.getElementById('print-report');
     container.innerHTML = buildPrintHTML();
+
+    // Append original cause & effect document pages
+    try {
+      const origPages = await loadOriginalDocPages();
+      origPages.forEach(pg => {
+        const div = document.createElement('div');
+        div.className = 'pr-page';
+        div.style.cssText = 'padding:0;display:flex;align-items:flex-start;justify-content:center;background:#fff;';
+        const img = document.createElement('img');
+        img.src = pg.dataUrl;
+        img.style.cssText = 'width:100%;height:auto;display:block;';
+        div.appendChild(img);
+        container.appendChild(div);
+      });
+    } catch (e) {
+      console.warn('Could not load original document for print:', e);
+    }
+
     document.body.classList.add('printing');
     window.print();
     document.body.classList.remove('printing');
@@ -2906,5 +2968,6 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 </body>
 </html>
