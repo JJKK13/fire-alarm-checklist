@@ -407,6 +407,101 @@
       color: #fcd34d;
     }
 
+    /* ── Signature pad ── */
+    .signature-section {
+      margin-top: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+
+    .signature-section h3 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sig-required-tag {
+      font-size: 0.68rem;
+      background: var(--primary-dim);
+      color: #93c5fd;
+      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .sig-canvas-wrap {
+      background: #fff;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+      overflow: hidden;
+      position: relative;
+      transition: border-color 0.15s;
+    }
+
+    .sig-canvas-wrap.warn { border-color: var(--warn); }
+
+    #sigCanvas {
+      display: block;
+      width: 100%;
+      height: 120px;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .sig-placeholder {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #cbd5e1;
+      font-size: 0.85rem;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .sig-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-clear-sig {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 0.28rem 0.8rem;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-clear-sig:hover { border-color: var(--primary); color: var(--primary); }
+
+    .sig-warn-msg {
+      font-size: 0.78rem;
+      color: #fcd34d;
+      display: none;
+    }
+
+    .sig-warn-msg.show { display: block; }
+
+    @media print {
+      .signature-section { border: 1px solid #ccc; background: #fff; color: #000; }
+      #sigCanvas { border: 1px solid #ccc; }
+    }
+
     .effect-status {
       font-size: 0.7rem;
       padding: 0.15rem 0.5rem;
@@ -754,6 +849,18 @@
           <span style="font-size:0.8rem;color:var(--muted);">Active effects shown with checkboxes. Click &#8964; to add notes.</span>
         </div>
         <div id="effects-list"></div>
+
+        <div class="signature-section">
+          <h3>Tester Signature <span class="sig-required-tag">Required to submit</span></h3>
+          <div class="sig-canvas-wrap" id="sigWrap">
+            <canvas id="sigCanvas"></canvas>
+            <div class="sig-placeholder" id="sigPlaceholder">Sign here with finger or mouse</div>
+          </div>
+          <div class="sig-actions">
+            <button class="btn-clear-sig" onclick="clearSignature()">Clear</button>
+            <span class="sig-warn-msg" id="sigWarnMsg">&#9888; Please sign before submitting</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -907,6 +1014,7 @@
 
     document.getElementById('no-cause').style.display = 'none';
     document.getElementById('checklist-content').style.display = 'block';
+    ensureSigInit();
 
     // Clear previous submit status and banner
     setStatus('', '');
@@ -1321,7 +1429,74 @@
     el.textContent = msg;
   }
 
+  // ── Signature Pad ────────────────────────────────────────
+  let sigDrawing = false;
+  let sigHasData = false;
+
+  function initSignatureCanvas() {
+    const canvas = document.getElementById('sigCanvas');
+    const wrap = document.getElementById('sigWrap');
+    // Set internal resolution to match display (retina-safe)
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    function getPos(e) {
+      const r = canvas.getBoundingClientRect();
+      const src = e.touches ? e.touches[0] : e;
+      return { x: src.clientX - r.left, y: src.clientY - r.top };
+    }
+
+    canvas.addEventListener('pointerdown', e => {
+      sigDrawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      canvas.setPointerCapture(e.pointerId);
+    });
+
+    canvas.addEventListener('pointermove', e => {
+      if (!sigDrawing) return;
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      if (!sigHasData) {
+        sigHasData = true;
+        document.getElementById('sigPlaceholder').style.display = 'none';
+        wrap.classList.remove('warn');
+        document.getElementById('sigWarnMsg').classList.remove('show');
+      }
+    });
+
+    canvas.addEventListener('pointerup', () => { sigDrawing = false; });
+    canvas.addEventListener('pointerleave', () => { sigDrawing = false; });
+  }
+
+  function clearSignature() {
+    const canvas = document.getElementById('sigCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    sigHasData = false;
+    document.getElementById('sigPlaceholder').style.display = '';
+  }
+
+  // Initialise canvas once checklist is first shown
+  let sigInitialised = false;
+  function ensureSigInit() {
+    if (sigInitialised) return;
+    sigInitialised = true;
+    setTimeout(initSignatureCanvas, 50);
+  }
+
   // ── Smartsheet Integration ───────────────────────────────
+  const SS_API_KEY = '6w2Hf1f78c7DrDUjfFrZCtPtvKjYcxXHhTtzb';
   const SS_SHEET_ID = '888957469413252';
   const SS_COLS = {
     testRef:        7270084400942980,
@@ -1339,7 +1514,14 @@
   };
 
   async function submitToSmartsheet() {
-    const apiKey = '6w2Hf1f78c7DrDUjfFrZCtPtvKjYcxXHhTtzb';
+    // Validate signature
+    if (!sigHasData) {
+      document.getElementById('sigWrap').classList.add('warn');
+      document.getElementById('sigWarnMsg').classList.add('show');
+      document.getElementById('sigWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     if (!selectedCause) {
       setStatus('error', 'Please select a trigger cause first.');
       return;
@@ -1396,7 +1578,7 @@
       const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${SS_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify([{ cells }]),
@@ -1405,6 +1587,23 @@
       const data = await resp.json();
 
       if (resp.ok && data.resultCode === 0) {
+        const rowId = data.result[0].id;
+        // Attach signature image to the row
+        try {
+          const canvas = document.getElementById('sigCanvas');
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          const formData = new FormData();
+          formData.append('file', blob, 'signature.png');
+          await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${SS_API_KEY}`,
+              'Content-Disposition': 'attachment; filename="signature.png"',
+            },
+            body: formData,
+          });
+        } catch (_) { /* signature attach failure is non-fatal */ }
+
         setStatus('success', `Submitted — ${testRef} logged to Smartsheet. ${passed} Pass, ${failed} Fail, ${total - done} outstanding. Result: ${overallResult}.`);
       } else {
         const msg = data.message || 'Unknown error';
