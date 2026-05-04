@@ -2306,17 +2306,6 @@
   // ── Final submission ──────────────────────────────────────
   const SS_API_KEY = '6w2Hf1f78c7DrDUjfFrZCtPtvKjYcxXHhTtzb';
   const SS_SHEET_ID = '888957469413252';
-  const CORS_PROXY = 'https://corsproxy.io/?';
-
-  // Try direct first; if CORS blocks it in Chrome, fall back via proxy
-  async function ssFetch(url, options) {
-    try {
-      const r = await fetch(url, options);
-      return r;
-    } catch {
-      return fetch(CORS_PROXY + encodeURIComponent(url), options);
-    }
-  }
   const SS_COLS = {
     testDate:   1640584866729860,
     testerName: 6144184494100356,
@@ -2655,9 +2644,8 @@
         { columnId: SS_COLS.testDate,   value: dateStr },
         { columnId: SS_COLS.result,     value: overallResult },
       ];
-      const resp = await ssFetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows`, {
+      const resp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows?access_token=${SS_API_KEY}`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${SS_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify([{ cells }]),
       });
       const data = await resp.json();
@@ -2680,9 +2668,8 @@
     try {
       const fd = new FormData();
       fd.append('file', new File([pdfBlob], fileName, { type: 'application/pdf' }));
-      const attachResp = await ssFetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments`, {
+      const attachResp = await fetch(`https://api.smartsheet.com/2.0/sheets/${SS_SHEET_ID}/rows/${rowId}/attachments?access_token=${SS_API_KEY}`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${SS_API_KEY}` },
         body: fd,
       });
       if (!attachResp.ok) {
