@@ -1448,15 +1448,17 @@
     { id: 'D', label: 'Break Glass Unit', area: 'External Carpark' },
     { id: 'E', label: 'Single Heat Detector — All Areas', area: 'Landlord / Tenant Areas' },
     { id: 'F', label: 'Single Smoke Detector — All Areas', area: 'Landlord / Tenant Areas' },
-    { id: 'G', label: 'Two Detectors or BGU+1 Detector — All Areas', area: 'Landlord / Tenant Areas' },
+    { id: 'G', label: 'Two Detectors — All Areas', area: 'Landlord / Tenant Areas' },
     { id: 'H', label: 'Break Glass Unit — All Areas', area: 'Landlord / Tenant Areas' },
     { id: 'I', label: 'Multiple Detectors / Break Glass Units — All Areas', area: 'Landlord / Tenant Areas' },
     { id: 'J', label: 'BGU in Stairs 1, 2, & 3', area: 'Landlord / Tenant Areas' },
     { id: 'K', label: 'BGU in Atrium Ground Floor', area: 'Landlord / Tenant Areas' },
-    { id: 'L', label: 'Single Detector or AOV Control Switch — Atrium Ground Floor', area: 'Landlord / Tenant Areas' },
+    { id: 'L', label: 'Single Detector on Ground Floor Atrium or Lift Lobbies on Levels 1–4 or AOV Control Switch — Atrium Ground Floor', area: 'Landlord / Tenant Areas' },
     { id: 'M', label: 'Single Detector or AOV Control Switch — Staircore 1, 2, or 3', area: 'Landlord / Tenant Areas' },
     { id: 'N', label: 'VESDA System in Atrium', area: 'Landlord / Tenant Areas' },
     { id: 'O', label: 'VESDA System', area: 'Landlord / Tenant Areas' },
+    { id: 'P', label: 'Kitchen Ansul System — Canopy & Pizza Oven', area: 'Landlord / Tenant Areas' },
+    { id: 'Q', label: 'Suppression System Activation', area: 'Landlord / Tenant Areas' },
   ];
 
   const EFFECTS = [
@@ -1477,25 +1479,29 @@
     { id: 14, num: 15, label: 'Access control system doors fail safe — locking mechanism dis-engages.',                                                 category: 'Access Control' },
     { id: 15, num: 16, label: 'Open security pass gates at reception.',                                                                                 category: 'Access Control' },
     { id: 16, num: 17, label: 'Barriers to car park entrance to power open and remain open.',                                                           category: 'External Carpark' },
+    { id: 17, num: 16, label: 'Fire curtains to drop.',                                                                                                  category: 'Other' },
+    { id: 18, num: 18, label: 'Kitchen distribution board to power down.',                                                                               category: 'Other' },
   ];
 
-  // Active effects per cause (effect IDs)
+  // Active effects per cause (effect IDs) — Rev 3, 14/05/2026
   const ACTIVE = {
     A: new Set([0, 1]),
     B: new Set([0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    C: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    D: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    C: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]),
+    D: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]),
     E: new Set([0, 1]),
     F: new Set([0, 1]),
-    G: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    H: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    I: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    J: new Set([0, 2, 4, 5]),
-    K: new Set([0, 3]),
+    G: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]),
+    H: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]),
+    I: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]),
+    J: new Set([0, 2, 4, 5, 17]),
+    K: new Set([0, 3, 17]),
     L: new Set([0, 3]),
-    M: new Set([0, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    N: new Set([0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-    O: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    M: new Set([0, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]),
+    N: new Set([0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]),
+    O: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]),
+    P: new Set([0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]),
+    Q: new Set([0]),
   };
 
   const CAT_COLORS = {
@@ -1506,9 +1512,10 @@
     'Mech Plant':     '#a855f7',
     'Access Control': '#10b981',
     'External Carpark': '#22c55e',
+    'Other':          '#ec4899',
   };
 
-  const CAT_ORDER = ['Alerts', 'AOV', 'General', 'Lifts', 'Mech Plant', 'Access Control', 'External Carpark'];
+  const CAT_ORDER = ['Alerts', 'AOV', 'General', 'Lifts', 'Mech Plant', 'Access Control', 'External Carpark', 'Other'];
 
   // ── State ────────────────────────────────────────────────
   let selectedCause = null;
